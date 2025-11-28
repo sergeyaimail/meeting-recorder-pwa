@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Запись и анализ встреч в реальном времени">
+    <meta name="description" content="Запись голоса и анализ диалога в реальном времени">
     <meta name="theme-color" content="#1f2121">
     <title>Meeting Recorder AI</title>
     <style>
@@ -145,8 +145,9 @@
 
         textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 100px;
             font-family: monospace;
+            font-size: 12px;
         }
 
         .status {
@@ -173,11 +174,11 @@
         }
 
         .time-display {
-            font-size: 24px;
+            font-size: 32px;
             font-weight: 700;
             color: var(--color-primary);
             text-align: center;
-            margin: 12px 0;
+            margin: 16px 0;
             font-family: monospace;
         }
 
@@ -189,28 +190,34 @@
             margin-bottom: 6px;
         }
 
-        .input-group {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            background: rgba(217, 70, 239, 0.2);
-            border-radius: 4px;
-            font-size: 12px;
-            margin-right: 8px;
-            margin-bottom: 4px;
-        }
-
         .recording-item {
             background: rgba(0, 217, 255, 0.1);
             border: 1px solid rgba(0, 217, 255, 0.2);
             border-radius: 6px;
             padding: 10px;
             margin: 8px 0;
+        }
+
+        .analysis-section {
+            background: rgba(217, 70, 239, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .analysis-title {
+            font-weight: 600;
+            color: #D946EF;
+            margin-bottom: 8px;
+        }
+
+        .analysis-item {
+            font-size: 12px;
+            margin-bottom: 6px;
+            padding: 6px;
+            background: rgba(217, 70, 239, 0.15);
+            border-left: 2px solid #D946EF;
+            padding-left: 8px;
         }
     </style>
 </head>
@@ -223,22 +230,12 @@
         <div class="grid">
             <!-- Recording Section -->
             <div class="card">
-                <div class="card-title">📹 Запись встречи</div>
+                <div class="card-title">📹 Запись диалога</div>
                 
                 <div class="controls">
                     <div>
-                        <label class="label">Участники встречи</label>
-                        <div class="input-group">
-                            <input type="text" id="participantInput" placeholder="Имя участника" />
-                            <button onclick="addParticipant()" style="flex: 0 0 auto; min-width: 80px;">Добавить</button>
-                        </div>
-                    </div>
-
-                    <div id="participantsList" style="font-size: 12px;"></div>
-
-                    <div>
                         <label class="label">Название встречи</label>
-                        <input type="text" id="meetingTitle" placeholder="Название встречи" />
+                        <input type="text" id="meetingTitle" placeholder="Введите название (опционально)" />
                     </div>
 
                     <div>
@@ -247,18 +244,14 @@
                     </div>
 
                     <div class="button-group">
-                        <button id="recordBtn" onclick="window.startRecording()">▶️ Начать</button>
+                        <button id="recordBtn" onclick="window.startRecording()">🎙️ Начать запись</button>
                         <button id="stopBtn" onclick="window.stopRecording()" disabled style="background: var(--color-secondary);">⏹️ Стоп</button>
                     </div>
 
                     <div>
-                        <label class="label">Текущий говорящий</label>
-                        <select id="currentSpeaker">
-                            <option value="">Выбрать участника...</option>
-                        </select>
+                        <label class="label">Текст диалога</label>
+                        <textarea id="liveTranscript" placeholder="Текст появится здесь автоматически при записи или введите вручную"></textarea>
                     </div>
-
-                    <textarea id="liveTranscript" placeholder="Текст появится здесь или введите вручную"></textarea>
 
                     <div class="button-group">
                         <button onclick="window.enableMicrophone()" style="background: var(--color-warning);">🎙️ Включить микрофон</button>
@@ -269,19 +262,21 @@
 
             <!-- Analysis Section -->
             <div class="card">
-                <div class="card-title">🔍 Анализ</div>
+                <div class="card-title">📊 Анализ диалога</div>
                 
                 <div class="controls">
-                    <button onclick="window.analyzeTranscript()" style="background: var(--color-secondary); margin-bottom: 12px;">✨ Анализировать</button>
-
-                    <div id="analysisResult" style="font-size: 13px; line-height: 1.8;"></div>
+                    <div id="analysisResult" style="font-size: 13px; line-height: 1.8;">
+                        <div style="color: var(--color-text-secondary); text-align: center; padding: 20px;">
+                            Здесь появится анализ после остановки записи
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Recordings Section -->
         <div class="card">
-            <div class="card-title">💾 Сохраненные встречи</div>
+            <div class="card-title">💾 История встреч</div>
             <div id="recordingsList" style="max-height: 300px; overflow-y: auto;"></div>
         </div>
     </div>
@@ -293,8 +288,6 @@
             recordingTime: 0,
             recordingTimer: null,
             transcript: '',
-            participants: [],
-            currentSpeaker: '',
             recordings: [],
             recognition: null,
             isListening: false,
@@ -306,10 +299,6 @@
             console.log('Page loaded, initializing...');
             initSpeechRecognition();
             loadRecordings();
-            document.getElementById('currentSpeaker').addEventListener('change', (e) => {
-                state.currentSpeaker = e.target.value;
-                console.log('Current speaker:', state.currentSpeaker);
-            });
         });
 
         // INITIALIZE SPEECH RECOGNITION ONCE
@@ -329,7 +318,7 @@
             state.recognition.onstart = () => {
                 console.log('✅ Speech recognition started');
                 state.isListening = true;
-                document.getElementById('recordStatus').textContent = '🔴 Микрофон активен';
+                document.getElementById('recordStatus').textContent = '🔴 Микрофон активен - говорите...';
                 document.getElementById('recordStatus').className = 'status recording';
             };
 
@@ -338,11 +327,7 @@
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     const transcript = event.results[i][0].transcript;
                     if (event.results[i].isFinal) {
-                        if (state.currentSpeaker) {
-                            state.transcript += `\n${state.currentSpeaker}: ${transcript}`;
-                        } else {
-                            state.transcript += `\n${transcript}`;
-                        }
+                        state.transcript += transcript + ' ';
                     } else {
                         interimTranscript += transcript;
                     }
@@ -367,54 +352,16 @@
                         } catch (e) {
                             console.log('Restart error:', e.message);
                         }
-                    }, 1000);
+                    }, 500);
                 }
             };
 
             console.log('✅ Speech recognition initialized');
         }
 
-        // ADD PARTICIPANT
-        window.addParticipant = function() {
-            const input = document.getElementById('participantInput');
-            const name = input.value.trim();
-            if (name && !state.participants.includes(name)) {
-                state.participants.push(name);
-                console.log('Participant added:', name);
-                input.value = '';
-                updateParticipantsList();
-                updateSpeakerSelect();
-            }
-        };
-
-        function updateParticipantsList() {
-            const list = document.getElementById('participantsList');
-            list.innerHTML = state.participants.map((p, i) => 
-                `<span class="badge">${p} <button onclick="window.removeParticipant(${i})" style="background: none; border: none; color: var(--color-error); cursor: pointer;">✕</button></span>`
-            ).join('');
-        }
-
-        window.removeParticipant = function(index) {
-            state.participants.splice(index, 1);
-            updateParticipantsList();
-            updateSpeakerSelect();
-        };
-
-        function updateSpeakerSelect() {
-            const select = document.getElementById('currentSpeaker');
-            const currentValue = select.value;
-            select.innerHTML = '<option value="">Выбрать участника...</option>' + 
-                state.participants.map(p => `<option value="${p}">${p}</option>`).join('');
-            select.value = currentValue;
-        }
-
         // START RECORDING
         window.startRecording = function() {
             console.log('▶️ startRecording clicked');
-            if (state.participants.length === 0) {
-                alert('❌ Пожалуйста, добавьте участников встречи');
-                return;
-            }
 
             state.isRecording = true;
             state.recordingTime = 0;
@@ -423,6 +370,7 @@
             document.getElementById('stopBtn').disabled = false;
             document.getElementById('recordStatus').textContent = '🔵 Запись началась - нажмите "Включить микрофон"';
             document.getElementById('recordStatus').className = 'status';
+            document.getElementById('liveTranscript').value = '';
 
             state.recordingTimer = setInterval(() => {
                 state.recordingTime++;
@@ -456,7 +404,11 @@
                 }
             }
 
-            saveRecording();
+            // Анализируем сразу после остановки
+            setTimeout(() => {
+                analyzeTranscript();
+                saveRecording();
+            }, 500);
         };
 
         // ENABLE MICROPHONE
@@ -464,7 +416,7 @@
             console.log('🎙️ enableMicrophone clicked, isRecording:', state.isRecording);
             
             if (!state.isRecording) {
-                alert('❌ Сначала нажмите "▶️ Начать"');
+                alert('❌ Сначала нажмите "🎙️ Начать запись"');
                 return;
             }
 
@@ -503,70 +455,30 @@
 
         // CLEAR TRANSCRIPT
         window.clearTranscript = function() {
-            if (confirm('Очистить текст встречи?')) {
+            if (confirm('Очистить текст диалога?')) {
                 state.transcript = '';
                 document.getElementById('liveTranscript').value = '';
+                document.getElementById('analysisResult').innerHTML = '<div style="color: var(--color-text-secondary); text-align: center; padding: 20px;">Здесь появится анализ после остановки записи</div>';
             }
         };
 
-        // SAVE RECORDING
-        function saveRecording() {
-            const title = document.getElementById('meetingTitle').value || `Встреча ${new Date().toLocaleString('ru-RU')}`;
-            const recording = {
-                id: Date.now(),
-                title: title,
-                date: new Date().toLocaleString('ru-RU'),
-                duration: state.recordingTime,
-                participants: [...state.participants],
-                transcript: state.transcript
-            };
-
-            state.recordings.push(recording);
-            saveToLocalStorage();
-            updateRecordingsList();
-            alert('✅ Встреча сохранена!');
-            
-            // Reset
-            document.getElementById('meetingTitle').value = '';
-            document.getElementById('timer').textContent = '00:00';
-            state.participants = [];
-            state.transcript = '';
-            updateParticipantsList();
-            updateSpeakerSelect();
-        }
-
         // ANALYZE TRANSCRIPT
-        window.analyzeTranscript = function() {
-            console.log('✨ analyzeTranscript clicked');
+        function analyzeTranscript() {
+            console.log('✨ analyzeTranscript called');
             if (!state.transcript.trim()) {
-                alert('❌ Пожалуйста, запишите или введите диалог');
+                document.getElementById('analysisResult').innerHTML = '<div style="color: var(--color-error); text-align: center; padding: 20px;">❌ Нет текста для анализа</div>';
                 return;
             }
 
-            const lines = state.transcript.split('\n').filter(line => line.trim());
-            
-            // 1. УЧАСТНИКИ И ИХ ДОЛЯ
-            const speakerStats = {};
-            lines.forEach(line => {
-                const match = line.match(/^([^:]+):\s*(.*)/);
-                if (match) {
-                    const speaker = match[1].trim();
-                    if (!speakerStats[speaker]) {
-                        speakerStats[speaker] = { lines: 0, words: 0 };
-                    }
-                    speakerStats[speaker].lines++;
-                    speakerStats[speaker].words += match[2].split(/\s+/).length;
-                }
-            });
-
-            // 2. КЛЮЧЕВЫЕ ТЕМЫ (по частоте слов)
             const fullText = state.transcript.toLowerCase();
-            const stopWords = ['и', 'в', 'на', 'с', 'по', 'то', 'что', 'из', 'за', 'от', 'до', 'как', 'это', 'или', 'он', 'она', 'они', 'мы', 'вы', 'я', 'ты', 'нас', 'вас', 'меня', 'тебя', 'нее', 'его', 'ее', 'их', 'будет', 'будут', 'есть', 'являются', 'был', 'была', 'были', 'быть'];
             
-            const words = fullText.match(/\b[а-яё]{4,}\b/g) || [];
+            // 1. КЛЮЧЕВЫЕ СЛОВА (по частоте)
+            const stopWords = ['и', 'в', 'на', 'с', 'по', 'то', 'что', 'из', 'за', 'от', 'до', 'как', 'это', 'или', 'он', 'она', 'они', 'мы', 'вы', 'я', 'ты', 'нас', 'вас', 'меня', 'тебя', 'нее', 'его', 'ее', 'их', 'будет', 'будут', 'есть', 'являются', 'был', 'была', 'были', 'быть', 'а', 'но', 'их', 'для', 'при', 'к', 'не', 'ни'];
+            
+            const words = fullText.match(/\b[а-яё]{3,}\b/g) || [];
             const wordFreq = {};
             words.forEach(word => {
-                if (!stopWords.includes(word)) {
+                if (!stopWords.includes(word) && word.length > 3) {
                     wordFreq[word] = (wordFreq[word] || 0) + 1;
                 }
             });
@@ -576,68 +488,77 @@
                 .slice(0, 5)
                 .map(entry => entry[0]);
 
-            // 3. КЛЮЧЕВЫЕ МОМЕНТЫ (по ключевым словам)
-            const keyMomentKeywords = ['важно', 'критично', 'срочно', 'должны', 'нужно', 'сделать', 'задача', 'проблема', 'решено', 'согласились', 'договорились', 'решение', 'необходимо', 'конечно', 'точно'];
-            const keyMoments = lines.filter(line => 
-                keyMomentKeywords.some(kw => line.toLowerCase().includes(kw))
-            ).slice(0, 5);
+            // 2. КЛЮЧЕВЫЕ МОМЕНТЫ
+            const keyMomentKeywords = ['важно', 'критично', 'срочно', 'должны', 'нужно', 'сделать', 'задача', 'проблема', 'решено', 'согласились', 'договорились', 'решение', 'необходимо', 'конечно', 'точно', 'решили', 'выводы'];
+            const sentences = state.transcript.split(/[.!?]+/).filter(s => s.trim());
+            const keyMoments = sentences.filter(sent => 
+                keyMomentKeywords.some(kw => sent.toLowerCase().includes(kw))
+            ).slice(0, 3);
 
-            // 4. ЗАДАЧИ (строки с действиями)
-            const taskKeywords = ['нужно', 'сделать', 'провести', 'подготовить', 'отправить', 'проверить', 'подумать', 'уточнить', 'обсудить', 'согласовать'];
-            const tasks = lines.filter(line => 
-                taskKeywords.some(kw => line.toLowerCase().includes(kw))
-            ).slice(0, 5);
+            // 3. ЗАДАЧИ
+            const taskKeywords = ['нужно', 'сделать', 'провести', 'подготовить', 'отправить', 'проверить', 'подумать', 'уточнить', 'обсудить', 'согласовать', 'узнать', 'выяснить'];
+            const tasks = sentences.filter(sent => 
+                taskKeywords.some(kw => sent.toLowerCase().includes(kw))
+            ).slice(0, 3);
 
-            // 5. ОБЩЕЕ РЕЗЮМЕ
-            const totalWords = lines.reduce((acc, line) => acc + line.split(/\s+/).length, 0);
-            
-            // Генерируем краткое резюме
-            const summaryText = topWords.length > 0 
-                ? `На встречи обсуждались следующие темы: <strong>${topWords.join(', ')}</strong>. Участвовало ${Object.keys(speakerStats).length} человек.`
-                : `Встреча прошла с участием ${Object.keys(speakerStats).length} человек.`;
+            // 4. ОБЩАЯ СТАТИСТИКА
+            const totalWords = state.transcript.split(/\s+/).length;
 
-            // 6. HTML РЕЗУЛЬТАТ
+            // 5. ФОРМИРУЕМ РЕЗЮМЕ
             const result = `
-                <div style="background: rgba(0, 217, 255, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
-                    <div style="font-weight: 600; color: #00D9FF; margin-bottom: 8px;">📋 КРАТКОЕ РЕЗЮМЕ</div>
-                    <div style="font-size: 13px; line-height: 1.6;">${summaryText} Всего ${lines.length} реплик, ~${totalWords} слов.</div>
+                <div class="analysis-section">
+                    <div class="analysis-title">📋 КРАТКОЕ РЕЗЮМЕ</div>
+                    <div style="font-size: 12px; line-height: 1.6; margin-bottom: 8px;">
+                        Встреча: <strong>${state.recordingTime > 0 ? Math.floor(state.recordingTime / 60) + ' мин ' + (state.recordingTime % 60) + ' сек' : 'менее минуты'}</strong><br>
+                        Объем: <strong>~${totalWords} слов</strong><br>
+                        ${topWords.length > 0 ? `Основные темы: <strong>${topWords.join(', ')}</strong>` : 'Анализ текста...'}
+                    </div>
                 </div>
 
-                <div style="background: rgba(217, 70, 239, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
-                    <div style="font-weight: 600; color: #D946EF; margin-bottom: 8px;">👥 УЧАСТНИКИ</div>
-                    ${Object.keys(speakerStats).length > 0 ? Object.entries(speakerStats).map(([speaker, stats]) => `
-                        <div style="font-size: 12px; margin-bottom: 6px;">
-                            <strong>${speaker}</strong>: ${stats.lines} реплик (~${stats.words} слов)
-                        </div>
-                    `).join('') : '<div style="font-size: 12px;">Данные не найдены</div>'}
+                ${keyMoments.length > 0 ? `
+                <div class="analysis-section">
+                    <div class="analysis-title">🎯 КЛЮЧЕВЫЕ МОМЕНТЫ</div>
+                    ${keyMoments.map(m => `<div class="analysis-item">• ${m.trim().substring(0, 100)}...</div>`).join('')}
                 </div>
+                ` : ''}
 
-                <div style="background: rgba(50, 184, 198, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
-                    <div style="font-weight: 600; color: #32b8c6; margin-bottom: 8px;">🎯 КЛЮЧЕВЫЕ МОМЕНТЫ</div>
-                    ${keyMoments.length > 0 ? keyMoments.map(m => `
-                        <div style="font-size: 12px; margin-bottom: 6px; padding: 6px; background: rgba(217, 70, 239, 0.15); border-left: 2px solid #D946EF; padding-left: 8px;">
-                            ${m.trim()}
-                        </div>
-                    `).join('') : '<div style="font-size: 12px; color: var(--color-text-secondary);">Не найдены</div>'}
+                ${tasks.length > 0 ? `
+                <div class="analysis-section">
+                    <div class="analysis-title">✅ ЗАДАЧИ И ДЕЙСТВИЯ</div>
+                    ${tasks.map((task, idx) => `<div class="analysis-item">${idx + 1}. ${task.trim().substring(0, 100)}...</div>`).join('')}
                 </div>
+                ` : ''}
 
-                <div style="background: rgba(230, 134, 97, 0.1); padding: 12px; border-radius: 8px;">
-                    <div style="font-weight: 600; color: #e68661; margin-bottom: 8px;">✅ ЗАДАЧИ / ДЕЙСТВИЯ</div>
-                    ${tasks.length > 0 ? tasks.map((task, idx) => `
-                        <div style="font-size: 12px; margin-bottom: 6px; padding: 6px; background: rgba(230, 134, 97, 0.15); border-left: 2px solid #e68661; padding-left: 8px;">
-                            ${idx + 1}. ${task.trim()}
-                        </div>
-                    `).join('') : '<div style="font-size: 12px; color: var(--color-text-secondary);">Не найдены</div>'}
-                </div>
-
-                <div style="margin-top: 12px; font-size: 12px; color: var(--color-text-secondary); text-align: center;">
-                    📊 Анализ: ${lines.length} реплик • ${Math.floor(state.recordingTime / 60)} мин ${state.recordingTime % 60} сек
+                <div style="margin-top: 12px; font-size: 11px; color: var(--color-text-secondary); text-align: center;">
+                    ✨ Анализ завершен
                 </div>
             `;
 
             document.getElementById('analysisResult').innerHTML = result;
             console.log('✅ Analysis complete');
-        };
+        }
+
+        // SAVE RECORDING
+        function saveRecording() {
+            const title = document.getElementById('meetingTitle').value || `Встреча ${new Date().toLocaleString('ru-RU')}`;
+            const recording = {
+                id: Date.now(),
+                title: title,
+                date: new Date().toLocaleString('ru-RU'),
+                duration: state.recordingTime,
+                transcript: state.transcript
+            };
+
+            state.recordings.push(recording);
+            saveToLocalStorage();
+            updateRecordingsList();
+            console.log('✅ Recording saved');
+            
+            // Reset
+            document.getElementById('meetingTitle').value = '';
+            document.getElementById('timer').textContent = '00:00';
+            state.transcript = '';
+        }
 
         // LOCAL STORAGE
         function saveToLocalStorage() {
@@ -664,7 +585,7 @@
                 <div class="recording-item">
                     <div style="font-weight: 600; color: var(--color-text);">${rec.title}</div>
                     <div style="font-size: 12px; color: var(--color-text-secondary);">${rec.date} • ${Math.floor(rec.duration / 60)}:${String(rec.duration % 60).padStart(2, '0')}</div>
-                    <div style="font-size: 12px; color: var(--color-primary); margin-top: 4px;">👥 ${rec.participants.join(', ')}</div>
+                    <div style="font-size: 12px; margin-top: 4px; color: var(--color-primary);">💬 ~${rec.transcript.split(/\s+/).length} слов</div>
                     <button onclick="window.deleteRecording(${i})" class="danger" style="padding: 4px 8px; font-size: 12px; min-width: 60px; margin-top: 8px;">Удалить</button>
                 </div>
             `).join('');
