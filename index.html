@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Запись голоса и анализ диалога в реальном времени">
     <meta name="theme-color" content="#1f2121">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Meeting Recorder AI</title>
     <style>
         :root {
@@ -219,6 +221,15 @@
             border-left: 2px solid #D946EF;
             padding-left: 8px;
         }
+
+        .debug-info {
+            background: rgba(100, 100, 100, 0.2);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            color: var(--color-text-secondary);
+            margin-top: 8px;
+        }
     </style>
 </head>
 <body>
@@ -257,6 +268,10 @@
                         <button onclick="window.enableMicrophone()" style="background: var(--color-warning);">🎙️ Включить микрофон</button>
                         <button onclick="window.clearTranscript()" class="danger">🗑️ Очистить</button>
                     </div>
+
+                    <div class="debug-info" id="debugInfo">
+                        Загрузка...
+                    </div>
                 </div>
             </div>
 
@@ -282,6 +297,28 @@
     </div>
 
     <script>
+        // Debug Info
+        function updateDebugInfo() {
+            const isHTTPS = window.location.protocol === 'https:';
+            const isAndroid = /Android/.test(navigator.userAgent);
+            const hasGetUserMedia = !!navigator.mediaDevices?.getUserMedia;
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const hasSpeechRecognition = !!SpeechRecognition;
+
+            const debugHTML = `
+                🔧 <strong>Диагностика:</strong><br>
+                HTTPS: ${isHTTPS ? '✅' : '❌'} ${isHTTPS ? '' : '(требуется для микрофона)'}<br>
+                Android: ${isAndroid ? '✅' : '❌'}<br>
+                getUserMedia: ${hasGetUserMedia ? '✅' : '❌'}<br>
+                Speech Recognition: ${hasSpeechRecognition ? '✅' : '❌'}
+            `;
+            
+            const debugElement = document.getElementById('debugInfo');
+            if (debugElement) {
+                debugElement.innerHTML = debugHTML;
+            }
+        }
+
         // Global State
         const state = {
             isRecording: false,
@@ -296,7 +333,11 @@
 
         // Initialize on page load
         window.addEventListener('load', () => {
-            console.log('Page loaded, initializing...');
+            console.log('✅ Page loaded');
+            console.log('Protocol:', window.location.protocol);
+            console.log('HTTPS:', window.location.protocol === 'https:' ? 'YES ✅' : 'NO ❌');
+            console.log('User Agent:', navigator.userAgent);
+            updateDebugInfo();
             initSpeechRecognition();
             loadRecordings();
         });
@@ -307,6 +348,7 @@
             
             if (!SpeechRecognition) {
                 console.error('❌ Speech Recognition not supported');
+                document.getElementById('recordStatus').textContent = '❌ Распознавание речи не поддерживается';
                 return;
             }
 
@@ -328,6 +370,7 @@
                     const transcript = event.results[i][0].transcript;
                     if (event.results[i].isFinal) {
                         state.transcript += transcript + ' ';
+                        console.log('✅ Final:', transcript);
                     } else {
                         interimTranscript += transcript;
                     }
@@ -337,6 +380,10 @@
 
             state.recognition.onerror = (event) => {
                 console.error('❌ Speech recognition error:', event.error);
+                let errorMsg = '❌ Ошибка: ' + event.error;
+                if (event.error === 'no-speech') errorMsg = '⚠️ Речь не обнаружена - говорите громче';
+                if (event.error === 'network') errorMsg = '❌ Нет интернета - требуется подключение';
+                document.getElementById('recordStatus').textContent = errorMsg;
             };
 
             state.recognition.onend = () => {
@@ -413,7 +460,7 @@
 
         // ENABLE MICROPHONE
         window.enableMicrophone = function() {
-            console.log('🎙️ enableMicrophone clicked, isRecording:', state.isRecording);
+            console.log('🎙️ enableMicrophone clicked');
             
             if (!state.isRecording) {
                 alert('❌ Сначала нажмите "🎙️ Начать запись"');
@@ -431,6 +478,7 @@
             }
 
             // Request microphone permission and start recognition
+            console.log('Requesting microphone permission...');
             navigator.mediaDevices.getUserMedia({ audio: true })
                 .then(stream => {
                     console.log('✅ Microphone permission granted');
@@ -441,15 +489,26 @@
                         try {
                             state.recognition.start();
                             console.log('✅ Recognition started');
+                            alert('✅ Микрофон включен! Говорите...');
                         } catch (e) {
                             console.error('❌ Error starting recognition:', e.message);
-                            alert('Ошибка: ' + e.message);
+                            alert('❌ Ошибка: ' + e.message);
                         }
                     }
                 })
                 .catch(error => {
-                    console.error('❌ Microphone error:', error);
-                    alert('❌ Ошибка доступа к микрофону: ' + error.message);
+                    console.error('❌ Microphone error:', error.name, error.message);
+                    let msg = '❌ Ошибка доступа к микрофону: ' + error.message;
+                    
+                    if (error.name === 'NotAllowedError') {
+                        msg = '❌ Разрешение на микрофон отклонено. Проверьте настройки браузера.';
+                    } else if (error.name === 'NotFoundError') {
+                        msg = '❌ Микрофон не найден на устройстве.';
+                    } else if (error.name === 'NotSupportedError') {
+                        msg = '❌ Используется HTTP вместо HTTPS. Требуется безопасное соединение.';
+                    }
+                    
+                    alert(msg);
                 });
         };
 
