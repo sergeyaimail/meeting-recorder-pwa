@@ -3,102 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Запись и анализ встреч в реальном времени">
     <meta name="theme-color" content="#1f2121">
-    <title>Диктофон совещаний</title>
-    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoi0JTQuNC60YLQvtGE0L7QvSDRgdC+0LLQtdGJ0LDQvdC40LkiLCJzaG9ydF9uYW1lIjoi0JTQuNC60YLQvtGE0L7QvSIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMWYyMTIxIiwidGhlbWVfY29sb3IiOiIjMWYyMTIxIn0=">
+    <title>Meeting Recorder AI</title>
     <style>
         :root {
             --color-primary: #00D9FF;
             --color-secondary: #D946EF;
-            --color-warning: #e68661;
-            --color-error: #c01537;
-            --color-success: #10b981;
             --color-bg: #1f2121;
             --color-surface: #2a2c2c;
-            --color-text: #f5f5f5;
-            --color-text-secondary: #a7a9a9;
-            --color-border: rgba(119, 124, 124, 0.3);
-            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --color-text: #ffffff;
+            --color-text-secondary: #b0b0b0;
+            --color-warning: #e68661;
+            --color-error: #c01537;
         }
 
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
         }
 
-        body {
-            font-family: var(--font-family);
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: var(--color-bg);
             color: var(--color-text);
-            line-height: 1.6;
-            padding: 16px;
-            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        body {
+            padding: 12px;
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
-        h1 {
-            font-size: 24px;
-            margin-bottom: 24px;
+        header {
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(217, 70, 239, 0.1));
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
             text-align: center;
         }
 
-        .status-bar {
+        h1 {
+            margin: 0;
+            font-size: 28px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
             background: var(--color-surface);
+            border: 1px solid rgba(0, 217, 255, 0.2);
+            border-radius: 10px;
             padding: 16px;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            border: 1px solid var(--color-border);
         }
 
-        .status-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .status-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .status-label {
-            color: var(--color-text-secondary);
-            font-size: 14px;
-        }
-
-        .status-value {
-            font-weight: 500;
-        }
-
-        .status-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .status-indicator.active {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--color-success);
-            animation: pulse 2s infinite;
-        }
-
-        .status-indicator.inactive {
-            background: rgba(192, 21, 47, 0.15);
-            color: var(--color-error);
-        }
-
-        .status-indicator.ready {
-            background: rgba(0, 217, 255, 0.15);
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 12px 0;
             color: var(--color-primary);
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 150ms ease;
+            background: var(--color-primary);
+            color: var(--color-bg);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 217, 255, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        button.secondary {
+            background: var(--color-secondary);
+            color: var(--color-text);
+        }
+
+        button.danger {
+            background: var(--color-error);
+            color: var(--color-text);
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 217, 255, 0.2);
+            border-radius: 6px;
+            color: var(--color-text);
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: monospace;
+        }
+
+        .status {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            margin: 8px 0;
+            background: rgba(0, 217, 255, 0.1);
+            color: var(--color-primary);
+            border: 1px solid var(--color-primary);
+        }
+
+        .status.recording {
+            background: rgba(255, 84, 89, 0.2);
+            color: #ff5459;
+            border: 1px solid #ff5459;
+            animation: pulse 1.5s ease-in-out infinite;
         }
 
         @keyframes pulse {
@@ -106,291 +172,511 @@
             50% { opacity: 0.6; }
         }
 
-        .card {
-            background: var(--color-surface);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            border: 1px solid var(--color-border);
+        .time-display {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--color-primary);
+            text-align: center;
+            margin: 12px 0;
+            font-family: monospace;
         }
 
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        label {
+        .label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            background: var(--color-bg);
-            border: 1px solid var(--color-border);
-            border-radius: 8px;
-            color: var(--color-text);
-            font-family: inherit;
-            font-size: 14px;
-        }
-
-        textarea {
-            min-height: 150px;
-            resize: vertical;
-            font-family: inherit;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--color-primary);
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-        }
-
-        button {
-            flex: 1;
-            min-width: 120px;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-
-        .btn-primary {
-            background: var(--color-primary);
-            color: var(--color-bg);
-        }
-
-        .btn-primary:hover {
-            background: #00b8db;
-        }
-
-        .btn-primary:disabled {
-            background: var(--color-border);
-            cursor: not-allowed;
-        }
-
-        .btn-secondary {
-            background: var(--color-secondary);
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #c738d4;
-        }
-
-        .btn-warning {
-            background: var(--color-warning);
-            color: white;
-        }
-
-        .btn-success {
-            background: var(--color-success);
-            color: white;
-        }
-
-        .btn-danger {
-            background: var(--color-error);
-            color: white;
-        }
-
-        .recordings-list {
-            margin-top: 24px;
-        }
-
-        .recording-item {
-            background: var(--color-surface);
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            border: 1px solid var(--color-border);
-        }
-
-        .recording-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .recording-title {
-            font-weight: 500;
-            font-size: 16px;
-        }
-
-        .recording-meta {
+            font-size: 12px;
+            font-weight: 600;
             color: var(--color-text-secondary);
-            font-size: 13px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
-        .recording-actions {
+        .input-group {
             display: flex;
             gap: 8px;
-            flex-wrap: wrap;
+            align-items: center;
         }
 
-        .recording-actions button {
-            flex: none;
-            min-width: auto;
-            padding: 8px 16px;
-            font-size: 13px;
-        }
-
-        .analysis-section {
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid var(--color-border);
-        }
-
-        .analysis-section h4 {
-            margin-bottom: 8px;
-            color: var(--color-primary);
-        }
-
-        .analysis-section ul {
-            padding-left: 20px;
-            color: var(--color-text-secondary);
-        }
-
-        .analysis-section li {
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: rgba(217, 70, 239, 0.2);
+            border-radius: 4px;
+            font-size: 12px;
+            margin-right: 8px;
             margin-bottom: 4px;
         }
 
-        .mic-help {
+        .recording-item {
             background: rgba(0, 217, 255, 0.1);
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 12px;
-            font-size: 13px;
-            color: var(--color-text-secondary);
             border: 1px solid rgba(0, 217, 255, 0.2);
-        }
-
-        .error-message {
-            background: rgba(192, 21, 47, 0.15);
-            color: var(--color-error);
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            font-size: 14px;
-            border: 1px solid rgba(192, 21, 47, 0.3);
-        }
-
-        .participant-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            background: rgba(0, 217, 255, 0.15);
-            color: var(--color-primary);
-            border-radius: 16px;
-            font-size: 13px;
-            margin-right: 8px;
-            margin-bottom: 8px;
-        }
-
-        @media (max-width: 600px) {
-            body {
-                padding: 12px;
-            }
-
-            h1 {
-                font-size: 20px;
-            }
-
-            .btn-group {
-                flex-direction: column;
-            }
-
-            button {
-                width: 100%;
-            }
+            border-radius: 6px;
+            padding: 10px;
+            margin: 8px 0;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎙️ Диктофон совещаний</h1>
+        <header>
+            <h1>🎤 Meeting Recorder AI</h1>
+        </header>
 
-        <div class="status-bar">
-            <div class="status-row">
-                <span class="status-label">Статус:</span>
-                <span class="status-value" id="statusText">Не начато</span>
+        <div class="grid">
+            <!-- Recording Section -->
+            <div class="card">
+                <div class="card-title">📹 Запись встречи</div>
+                
+                <div class="controls">
+                    <div>
+                        <label class="label">Участники встречи</label>
+                        <div class="input-group">
+                            <input type="text" id="participantInput" placeholder="Имя участника" />
+                            <button onclick="addParticipant()" style="flex: 0 0 auto; min-width: 80px;">Добавить</button>
+                        </div>
+                    </div>
+
+                    <div id="participantsList" style="font-size: 12px;"></div>
+
+                    <div>
+                        <label class="label">Название встречи</label>
+                        <input type="text" id="meetingTitle" placeholder="Название встречи" />
+                    </div>
+
+                    <div>
+                        <div class="time-display" id="timer">00:00</div>
+                        <div id="recordStatus" class="status">🔵 Готово к записи</div>
+                    </div>
+
+                    <div class="button-group">
+                        <button id="recordBtn" onclick="window.startRecording()">▶️ Начать</button>
+                        <button id="stopBtn" onclick="window.stopRecording()" disabled style="background: var(--color-secondary);">⏹️ Стоп</button>
+                    </div>
+
+                    <div>
+                        <label class="label">Текущий говорящий</label>
+                        <select id="currentSpeaker">
+                            <option value="">Выбрать участника...</option>
+                        </select>
+                    </div>
+
+                    <textarea id="liveTranscript" placeholder="Текст появится здесь или введите вручную"></textarea>
+
+                    <div class="button-group">
+                        <button onclick="window.enableMicrophone()" style="background: var(--color-warning);">🎙️ Включить микрофон</button>
+                        <button onclick="window.clearTranscript()" class="danger">🗑️ Очистить</button>
+                    </div>
+                </div>
             </div>
-            <div class="status-row">
-                <span class="status-label">Микрофон:</span>
-                <span class="status-indicator inactive" id="micStatus">⚫ Отключен</span>
-            </div>
-            <div class="status-row">
-                <span class="status-label">Время записи:</span>
-                <span class="status-value" id="timerDisplay">00:00:00</span>
+
+            <!-- Analysis Section -->
+            <div class="card">
+                <div class="card-title">🔍 Анализ</div>
+                
+                <div class="controls">
+                    <button onclick="window.analyzeTranscript()" style="background: var(--color-secondary); margin-bottom: 12px;">✨ Анализировать</button>
+
+                    <div id="analysisResult" style="font-size: 13px; line-height: 1.8;"></div>
+                </div>
             </div>
         </div>
 
-        <div id="errorContainer"></div>
-
+        <!-- Recordings Section -->
         <div class="card">
-            <div class="form-group">
-                <label for="meetingTopic">Тема совещания:</label>
-                <input type="text" id="meetingTopic" placeholder="Например: Планерка команды">
-            </div>
-
-            <div class="form-group">
-                <label for="participantInput">Участники:</label>
-                <input type="text" id="participantInput" placeholder="Введите имя и нажмите Enter">
-                <div id="participantsList" style="margin-top: 8px;"></div>
-            </div>
-
-            <div class="form-group">
-                <label for="currentSpeaker">Кто говорит сейчас:</label>
-                <select id="currentSpeaker">
-                    <option value="">Не выбрано</option>
-                </select>
-            </div>
-
-            <div class="btn-group">
-                <button class="btn-primary" id="startBtn">▶️ Начать</button>
-                <button class="btn-warning" id="stopBtn" disabled>⏹️ Стоп</button>
-            </div>
-
-            <div class="btn-group">
-                <button class="btn-success" id="micBtn" disabled>🎙️ Включить микрофон</button>
-                <button class="btn-danger" id="micStopBtn" disabled>🔇 Выключить микрофон</button>
-            </div>
-
-            <div class="mic-help">
-                💡 <strong>Как пользоваться:</strong><br>
-                1. Нажмите "Начать" чтобы запустить таймер<br>
-                2. Нажмите "Включить микрофон" - браузер запросит разрешение<br>
-                3. Разрешите доступ к микрофону<br>
-                4. Говорите - текст будет появляться автоматически<br>
-                5. Вы также можете редактировать текст вручную
-            </div>
-
-            <div class="form-group" style="margin-top: 16px;">
-                <label for="transcriptText">Транскрипция (автоматическая + ручная):</label>
-                <textarea id="transcriptText" placeholder="Текст будет появляться здесь автоматически, когда вы включите микрофон. Вы также можете печатать вручную."></textarea>
-            </div>
-
-            <button class="btn-secondary" id="analyzeBtn" disabled>✨ Анализировать</button>
-        </div>
-
-        <div class="recordings-list">
-            <h2 style="margin-bottom: 16px;">📋 Сохраненные записи</h2>
-            <div id="recordingsList"></div>
+            <div class="card-title">💾 Сохраненные встречи</div>
+            <div id="recordingsList" style="max-height: 300px; overflow-y: auto;"></div>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script>
+        // Global State
+        const state = {
+            isRecording: false,
+            recordingTime: 0,
+            recordingTimer: null,
+            transcript: '',
+            participants: [],
+            currentSpeaker: '',
+            recordings: [],
+            recognition: null,
+            isListening: false,
+            mediaStream: null
+        };
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            console.log('Page loaded, initializing...');
+            initSpeechRecognition();
+            loadRecordings();
+            document.getElementById('currentSpeaker').addEventListener('change', (e) => {
+                state.currentSpeaker = e.target.value;
+                console.log('Current speaker:', state.currentSpeaker);
+            });
+        });
+
+        // INITIALIZE SPEECH RECOGNITION ONCE
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (!SpeechRecognition) {
+                console.error('❌ Speech Recognition not supported');
+                return;
+            }
+
+            state.recognition = new SpeechRecognition();
+            state.recognition.continuous = true;
+            state.recognition.interimResults = true;
+            state.recognition.lang = 'ru-RU';
+
+            state.recognition.onstart = () => {
+                console.log('✅ Speech recognition started');
+                state.isListening = true;
+                document.getElementById('recordStatus').textContent = '🔴 Микрофон активен';
+                document.getElementById('recordStatus').className = 'status recording';
+            };
+
+            state.recognition.onresult = (event) => {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        if (state.currentSpeaker) {
+                            state.transcript += `\n${state.currentSpeaker}: ${transcript}`;
+                        } else {
+                            state.transcript += `\n${transcript}`;
+                        }
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                document.getElementById('liveTranscript').value = state.transcript + interimTranscript;
+            };
+
+            state.recognition.onerror = (event) => {
+                console.error('❌ Speech recognition error:', event.error);
+            };
+
+            state.recognition.onend = () => {
+                console.log('Speech recognition ended');
+                state.isListening = false;
+                
+                // AUTO-RESTART if recording is still active
+                if (state.isRecording) {
+                    console.log('Auto-restarting recognition...');
+                    setTimeout(() => {
+                        try {
+                            state.recognition.start();
+                        } catch (e) {
+                            console.log('Restart error:', e.message);
+                        }
+                    }, 1000);
+                }
+            };
+
+            console.log('✅ Speech recognition initialized');
+        }
+
+        // ADD PARTICIPANT
+        window.addParticipant = function() {
+            const input = document.getElementById('participantInput');
+            const name = input.value.trim();
+            if (name && !state.participants.includes(name)) {
+                state.participants.push(name);
+                console.log('Participant added:', name);
+                input.value = '';
+                updateParticipantsList();
+                updateSpeakerSelect();
+            }
+        };
+
+        function updateParticipantsList() {
+            const list = document.getElementById('participantsList');
+            list.innerHTML = state.participants.map((p, i) => 
+                `<span class="badge">${p} <button onclick="window.removeParticipant(${i})" style="background: none; border: none; color: var(--color-error); cursor: pointer;">✕</button></span>`
+            ).join('');
+        }
+
+        window.removeParticipant = function(index) {
+            state.participants.splice(index, 1);
+            updateParticipantsList();
+            updateSpeakerSelect();
+        };
+
+        function updateSpeakerSelect() {
+            const select = document.getElementById('currentSpeaker');
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">Выбрать участника...</option>' + 
+                state.participants.map(p => `<option value="${p}">${p}</option>`).join('');
+            select.value = currentValue;
+        }
+
+        // START RECORDING
+        window.startRecording = function() {
+            console.log('▶️ startRecording clicked');
+            if (state.participants.length === 0) {
+                alert('❌ Пожалуйста, добавьте участников встречи');
+                return;
+            }
+
+            state.isRecording = true;
+            state.recordingTime = 0;
+            state.transcript = '';
+            document.getElementById('recordBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            document.getElementById('recordStatus').textContent = '🔵 Запись началась - нажмите "Включить микрофон"';
+            document.getElementById('recordStatus').className = 'status';
+
+            state.recordingTimer = setInterval(() => {
+                state.recordingTime++;
+                const mins = Math.floor(state.recordingTime / 60);
+                const secs = state.recordingTime % 60;
+                document.getElementById('timer').textContent = 
+                    `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }, 1000);
+
+            console.log('✅ Recording started');
+        };
+
+        // STOP RECORDING
+        window.stopRecording = function() {
+            console.log('⏹️ stopRecording clicked');
+            if (!state.isRecording) return;
+
+            state.isRecording = false;
+            clearInterval(state.recordingTimer);
+            document.getElementById('recordBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('recordStatus').textContent = '✅ Запись завершена';
+            document.getElementById('recordStatus').className = 'status';
+
+            if (state.isListening && state.recognition) {
+                console.log('Stopping recognition...');
+                try {
+                    state.recognition.stop();
+                } catch (e) {
+                    console.log('Stop error:', e.message);
+                }
+            }
+
+            saveRecording();
+        };
+
+        // ENABLE MICROPHONE
+        window.enableMicrophone = function() {
+            console.log('🎙️ enableMicrophone clicked, isRecording:', state.isRecording);
+            
+            if (!state.isRecording) {
+                alert('❌ Сначала нажмите "▶️ Начать"');
+                return;
+            }
+
+            if (!state.recognition) {
+                alert('❌ Распознавание речи не доступно');
+                return;
+            }
+
+            if (state.isListening) {
+                alert('⚠️ Микрофон уже включен');
+                return;
+            }
+
+            // Request microphone permission and start recognition
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    console.log('✅ Microphone permission granted');
+                    state.mediaStream = stream;
+                    
+                    // Start recognition
+                    if (!state.isListening) {
+                        try {
+                            state.recognition.start();
+                            console.log('✅ Recognition started');
+                        } catch (e) {
+                            console.error('❌ Error starting recognition:', e.message);
+                            alert('Ошибка: ' + e.message);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Microphone error:', error);
+                    alert('❌ Ошибка доступа к микрофону: ' + error.message);
+                });
+        };
+
+        // CLEAR TRANSCRIPT
+        window.clearTranscript = function() {
+            if (confirm('Очистить текст встречи?')) {
+                state.transcript = '';
+                document.getElementById('liveTranscript').value = '';
+            }
+        };
+
+        // SAVE RECORDING
+        function saveRecording() {
+            const title = document.getElementById('meetingTitle').value || `Встреча ${new Date().toLocaleString('ru-RU')}`;
+            const recording = {
+                id: Date.now(),
+                title: title,
+                date: new Date().toLocaleString('ru-RU'),
+                duration: state.recordingTime,
+                participants: [...state.participants],
+                transcript: state.transcript
+            };
+
+            state.recordings.push(recording);
+            saveToLocalStorage();
+            updateRecordingsList();
+            alert('✅ Встреча сохранена!');
+            
+            // Reset
+            document.getElementById('meetingTitle').value = '';
+            document.getElementById('timer').textContent = '00:00';
+            state.participants = [];
+            state.transcript = '';
+            updateParticipantsList();
+            updateSpeakerSelect();
+        }
+
+        // ANALYZE TRANSCRIPT
+        window.analyzeTranscript = function() {
+            console.log('✨ analyzeTranscript clicked');
+            if (!state.transcript.trim()) {
+                alert('❌ Пожалуйста, запишите или введите диалог');
+                return;
+            }
+
+            const lines = state.transcript.split('\n').filter(line => line.trim());
+            
+            // 1. УЧАСТНИКИ И ИХ ДОЛЯ
+            const speakerStats = {};
+            lines.forEach(line => {
+                const match = line.match(/^([^:]+):\s*(.*)/);
+                if (match) {
+                    const speaker = match[1].trim();
+                    if (!speakerStats[speaker]) {
+                        speakerStats[speaker] = { lines: 0, words: 0 };
+                    }
+                    speakerStats[speaker].lines++;
+                    speakerStats[speaker].words += match[2].split(/\s+/).length;
+                }
+            });
+
+            // 2. КЛЮЧЕВЫЕ ТЕМЫ (по частоте слов)
+            const fullText = state.transcript.toLowerCase();
+            const stopWords = ['и', 'в', 'на', 'с', 'по', 'то', 'что', 'из', 'за', 'от', 'до', 'как', 'это', 'или', 'он', 'она', 'они', 'мы', 'вы', 'я', 'ты', 'нас', 'вас', 'меня', 'тебя', 'нее', 'его', 'ее', 'их', 'будет', 'будут', 'есть', 'являются', 'был', 'была', 'были', 'быть'];
+            
+            const words = fullText.match(/\b[а-яё]{4,}\b/g) || [];
+            const wordFreq = {};
+            words.forEach(word => {
+                if (!stopWords.includes(word)) {
+                    wordFreq[word] = (wordFreq[word] || 0) + 1;
+                }
+            });
+
+            const topWords = Object.entries(wordFreq)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(entry => entry[0]);
+
+            // 3. КЛЮЧЕВЫЕ МОМЕНТЫ (по ключевым словам)
+            const keyMomentKeywords = ['важно', 'критично', 'срочно', 'должны', 'нужно', 'сделать', 'задача', 'проблема', 'решено', 'согласились', 'договорились', 'решение', 'необходимо', 'конечно', 'точно'];
+            const keyMoments = lines.filter(line => 
+                keyMomentKeywords.some(kw => line.toLowerCase().includes(kw))
+            ).slice(0, 5);
+
+            // 4. ЗАДАЧИ (строки с действиями)
+            const taskKeywords = ['нужно', 'сделать', 'провести', 'подготовить', 'отправить', 'проверить', 'подумать', 'уточнить', 'обсудить', 'согласовать'];
+            const tasks = lines.filter(line => 
+                taskKeywords.some(kw => line.toLowerCase().includes(kw))
+            ).slice(0, 5);
+
+            // 5. ОБЩЕЕ РЕЗЮМЕ
+            const totalWords = lines.reduce((acc, line) => acc + line.split(/\s+/).length, 0);
+            
+            // Генерируем краткое резюме
+            const summaryText = topWords.length > 0 
+                ? `На встречи обсуждались следующие темы: <strong>${topWords.join(', ')}</strong>. Участвовало ${Object.keys(speakerStats).length} человек.`
+                : `Встреча прошла с участием ${Object.keys(speakerStats).length} человек.`;
+
+            // 6. HTML РЕЗУЛЬТАТ
+            const result = `
+                <div style="background: rgba(0, 217, 255, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                    <div style="font-weight: 600; color: #00D9FF; margin-bottom: 8px;">📋 КРАТКОЕ РЕЗЮМЕ</div>
+                    <div style="font-size: 13px; line-height: 1.6;">${summaryText} Всего ${lines.length} реплик, ~${totalWords} слов.</div>
+                </div>
+
+                <div style="background: rgba(217, 70, 239, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                    <div style="font-weight: 600; color: #D946EF; margin-bottom: 8px;">👥 УЧАСТНИКИ</div>
+                    ${Object.keys(speakerStats).length > 0 ? Object.entries(speakerStats).map(([speaker, stats]) => `
+                        <div style="font-size: 12px; margin-bottom: 6px;">
+                            <strong>${speaker}</strong>: ${stats.lines} реплик (~${stats.words} слов)
+                        </div>
+                    `).join('') : '<div style="font-size: 12px;">Данные не найдены</div>'}
+                </div>
+
+                <div style="background: rgba(50, 184, 198, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                    <div style="font-weight: 600; color: #32b8c6; margin-bottom: 8px;">🎯 КЛЮЧЕВЫЕ МОМЕНТЫ</div>
+                    ${keyMoments.length > 0 ? keyMoments.map(m => `
+                        <div style="font-size: 12px; margin-bottom: 6px; padding: 6px; background: rgba(217, 70, 239, 0.15); border-left: 2px solid #D946EF; padding-left: 8px;">
+                            ${m.trim()}
+                        </div>
+                    `).join('') : '<div style="font-size: 12px; color: var(--color-text-secondary);">Не найдены</div>'}
+                </div>
+
+                <div style="background: rgba(230, 134, 97, 0.1); padding: 12px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #e68661; margin-bottom: 8px;">✅ ЗАДАЧИ / ДЕЙСТВИЯ</div>
+                    ${tasks.length > 0 ? tasks.map((task, idx) => `
+                        <div style="font-size: 12px; margin-bottom: 6px; padding: 6px; background: rgba(230, 134, 97, 0.15); border-left: 2px solid #e68661; padding-left: 8px;">
+                            ${idx + 1}. ${task.trim()}
+                        </div>
+                    `).join('') : '<div style="font-size: 12px; color: var(--color-text-secondary);">Не найдены</div>'}
+                </div>
+
+                <div style="margin-top: 12px; font-size: 12px; color: var(--color-text-secondary); text-align: center;">
+                    📊 Анализ: ${lines.length} реплик • ${Math.floor(state.recordingTime / 60)} мин ${state.recordingTime % 60} сек
+                </div>
+            `;
+
+            document.getElementById('analysisResult').innerHTML = result;
+            console.log('✅ Analysis complete');
+        };
+
+        // LOCAL STORAGE
+        function saveToLocalStorage() {
+            localStorage.setItem('meetingRecordings', JSON.stringify(state.recordings));
+        }
+
+        function loadRecordings() {
+            const saved = localStorage.getItem('meetingRecordings');
+            if (saved) {
+                state.recordings = JSON.parse(saved);
+                updateRecordingsList();
+            }
+        }
+
+        function updateRecordingsList() {
+            const list = document.getElementById('recordingsList');
+            
+            if (state.recordings.length === 0) {
+                list.innerHTML = '<div style="text-align: center; color: var(--color-text-secondary); padding: 20px;">Нет сохраненных встреч</div>';
+                return;
+            }
+
+            list.innerHTML = state.recordings.map((rec, i) => `
+                <div class="recording-item">
+                    <div style="font-weight: 600; color: var(--color-text);">${rec.title}</div>
+                    <div style="font-size: 12px; color: var(--color-text-secondary);">${rec.date} • ${Math.floor(rec.duration / 60)}:${String(rec.duration % 60).padStart(2, '0')}</div>
+                    <div style="font-size: 12px; color: var(--color-primary); margin-top: 4px;">👥 ${rec.participants.join(', ')}</div>
+                    <button onclick="window.deleteRecording(${i})" class="danger" style="padding: 4px 8px; font-size: 12px; min-width: 60px; margin-top: 8px;">Удалить</button>
+                </div>
+            `).join('');
+        }
+
+        window.deleteRecording = function(index) {
+            if (confirm('Удалить эту встречу?')) {
+                state.recordings.splice(index, 1);
+                saveToLocalStorage();
+                updateRecordingsList();
+            }
+        };
+    </script>
 </body>
 </html>
