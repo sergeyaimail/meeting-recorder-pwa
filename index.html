@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Запись голоса и анализ диалога в реальном времени">
+    <meta name="description" content="Запись голоса и анализ диалога">
     <meta name="theme-color" content="#1f2121">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Meeting Recorder AI</title>
     <style>
         :root {
@@ -101,12 +99,12 @@
 
         button {
             flex: 1;
-            min-width: 100px;
-            padding: 10px 16px;
+            min-width: 90px;
+            padding: 12px 16px;
             border: none;
             border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: 13px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 150ms ease;
             background: var(--color-primary);
@@ -133,27 +131,32 @@
             color: var(--color-text);
         }
 
+        button.warning {
+            background: var(--color-warning);
+            color: var(--color-bg);
+        }
+
         input[type="text"],
-        textarea,
-        select {
+        textarea {
             flex: 1;
-            padding: 8px 12px;
+            padding: 10px 12px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(0, 217, 255, 0.2);
             border-radius: 6px;
             color: var(--color-text);
-            font-size: 14px;
+            font-size: 13px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
         textarea {
             resize: vertical;
-            min-height: 100px;
+            min-height: 120px;
             font-family: monospace;
             font-size: 12px;
         }
 
         .status {
-            padding: 8px 12px;
+            padding: 10px 12px;
             border-radius: 6px;
             font-size: 13px;
             font-weight: 500;
@@ -170,26 +173,34 @@
             animation: pulse 1.5s ease-in-out infinite;
         }
 
+        .status.error {
+            background: rgba(192, 21, 47, 0.2);
+            color: #ff5459;
+            border: 1px solid #ff5459;
+        }
+
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
         }
 
         .time-display {
-            font-size: 32px;
+            font-size: 48px;
             font-weight: 700;
             color: var(--color-primary);
             text-align: center;
-            margin: 16px 0;
+            margin: 20px 0;
             font-family: monospace;
         }
 
         .label {
             display: block;
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 700;
             color: var(--color-text-secondary);
             margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .recording-item {
@@ -208,27 +219,39 @@
         }
 
         .analysis-title {
-            font-weight: 600;
+            font-weight: 700;
             color: #D946EF;
             margin-bottom: 8px;
+            font-size: 13px;
         }
 
         .analysis-item {
             font-size: 12px;
             margin-bottom: 6px;
-            padding: 6px;
+            padding: 6px 8px;
             background: rgba(217, 70, 239, 0.15);
-            border-left: 2px solid #D946EF;
-            padding-left: 8px;
+            border-left: 3px solid #D946EF;
+            border-radius: 2px;
         }
 
         .debug-info {
-            background: rgba(100, 100, 100, 0.2);
-            padding: 8px;
+            background: rgba(0, 217, 255, 0.1);
+            padding: 10px;
             border-radius: 6px;
             font-size: 11px;
             color: var(--color-text-secondary);
-            margin-top: 8px;
+            margin-top: 12px;
+            line-height: 1.6;
+        }
+
+        .info-box {
+            background: rgba(230, 134, 97, 0.1);
+            border: 1px solid rgba(230, 134, 97, 0.3);
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: var(--color-text);
         }
     </style>
 </head>
@@ -244,45 +267,49 @@
                 <div class="card-title">📹 Запись диалога</div>
                 
                 <div class="controls">
+                    <div class="info-box">
+                        💡 Введите текст вручную или используйте микрофон
+                    </div>
+
                     <div>
                         <label class="label">Название встречи</label>
-                        <input type="text" id="meetingTitle" placeholder="Введите название (опционально)" />
+                        <input type="text" id="meetingTitle" placeholder="Опционально" />
                     </div>
 
                     <div>
                         <div class="time-display" id="timer">00:00</div>
-                        <div id="recordStatus" class="status">🔵 Готово к записи</div>
+                        <div id="recordStatus" class="status">🔵 Готово</div>
                     </div>
 
                     <div class="button-group">
-                        <button id="recordBtn" onclick="window.startRecording()">🎙️ Начать запись</button>
-                        <button id="stopBtn" onclick="window.stopRecording()" disabled style="background: var(--color-secondary);">⏹️ Стоп</button>
+                        <button id="recordBtn" onclick="window.startRecording()">▶️ Начать</button>
+                        <button id="stopBtn" onclick="window.stopRecording()" disabled class="secondary">⏹️ Стоп</button>
                     </div>
 
                     <div>
                         <label class="label">Текст диалога</label>
-                        <textarea id="liveTranscript" placeholder="Текст появится здесь автоматически при записи или введите вручную"></textarea>
+                        <textarea id="liveTranscript" placeholder="Введите текст вручную или микрофон заполнит автоматически"></textarea>
                     </div>
 
                     <div class="button-group">
-                        <button onclick="window.enableMicrophone()" style="background: var(--color-warning);">🎙️ Включить микрофон</button>
+                        <button onclick="window.enableMicrophone()" class="warning">🎙️ Микрофон</button>
                         <button onclick="window.clearTranscript()" class="danger">🗑️ Очистить</button>
                     </div>
 
                     <div class="debug-info" id="debugInfo">
-                        Загрузка...
+                        Инициализация...
                     </div>
                 </div>
             </div>
 
             <!-- Analysis Section -->
             <div class="card">
-                <div class="card-title">📊 Анализ диалога</div>
+                <div class="card-title">📊 Анализ встречи</div>
                 
                 <div class="controls">
-                    <div id="analysisResult" style="font-size: 13px; line-height: 1.8;">
-                        <div style="color: var(--color-text-secondary); text-align: center; padding: 20px;">
-                            Здесь появится анализ после остановки записи
+                    <div id="analysisResult" style="font-size: 13px; line-height: 1.8; min-height: 100px;">
+                        <div style="color: var(--color-text-secondary); text-align: center; padding: 40px 20px;">
+                            ⏳ Нажмите "Стоп" для анализа
                         </div>
                     </div>
                 </div>
@@ -292,34 +319,12 @@
         <!-- Recordings Section -->
         <div class="card">
             <div class="card-title">💾 История встреч</div>
-            <div id="recordingsList" style="max-height: 300px; overflow-y: auto;"></div>
+            <div id="recordingsList" style="max-height: 400px; overflow-y: auto;"></div>
         </div>
     </div>
 
     <script>
-        // Debug Info
-        function updateDebugInfo() {
-            const isHTTPS = window.location.protocol === 'https:';
-            const isAndroid = /Android/.test(navigator.userAgent);
-            const hasGetUserMedia = !!navigator.mediaDevices?.getUserMedia;
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const hasSpeechRecognition = !!SpeechRecognition;
-
-            const debugHTML = `
-                🔧 <strong>Диагностика:</strong><br>
-                HTTPS: ${isHTTPS ? '✅' : '❌'} ${isHTTPS ? '' : '(требуется для микрофона)'}<br>
-                Android: ${isAndroid ? '✅' : '❌'}<br>
-                getUserMedia: ${hasGetUserMedia ? '✅' : '❌'}<br>
-                Speech Recognition: ${hasSpeechRecognition ? '✅' : '❌'}
-            `;
-            
-            const debugElement = document.getElementById('debugInfo');
-            if (debugElement) {
-                debugElement.innerHTML = debugHTML;
-            }
-        }
-
-        // Global State
+        // GLOBAL STATE
         const state = {
             isRecording: false,
             recordingTime: 0,
@@ -331,119 +336,131 @@
             mediaStream: null
         };
 
-        // Initialize on page load
+        // INITIALIZE
         window.addEventListener('load', () => {
-            console.log('✅ Page loaded');
-            console.log('Protocol:', window.location.protocol);
-            console.log('HTTPS:', window.location.protocol === 'https:' ? 'YES ✅' : 'NO ❌');
-            console.log('User Agent:', navigator.userAgent);
-            updateDebugInfo();
+            console.log('🚀 App initialized');
             initSpeechRecognition();
+            updateDebugInfo();
             loadRecordings();
         });
 
-        // INITIALIZE SPEECH RECOGNITION ONCE
+        // DEBUG INFO
+        function updateDebugInfo() {
+            const isHTTPS = window.location.protocol === 'https:';
+            const isAndroid = /Android/.test(navigator.userAgent);
+            const hasGetUserMedia = !!navigator.mediaDevices?.getUserMedia;
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const hasSpeechRecognition = !!SpeechRecognition;
+
+            const debugHTML = `
+                <strong>✅ Проверка:</strong><br>
+                HTTPS: ${isHTTPS ? '✅' : '❌ (требуется)'}<br>
+                getUserMedia: ${hasGetUserMedia ? '✅' : '❌'}<br>
+                Speech API: ${hasSpeechRecognition ? '✅' : '❌'}<br>
+                Android: ${isAndroid ? '✅' : 'нет'}
+            `;
+            
+            const debugElement = document.getElementById('debugInfo');
+            if (debugElement) {
+                debugElement.innerHTML = debugHTML;
+            }
+        }
+
+        // SPEECH RECOGNITION INIT
         function initSpeechRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             
             if (!SpeechRecognition) {
-                console.error('❌ Speech Recognition not supported');
-                document.getElementById('recordStatus').textContent = '❌ Распознавание речи не поддерживается';
+                console.log('⚠️ Speech Recognition не поддерживается');
                 return;
             }
 
-            state.recognition = new SpeechRecognition();
-            state.recognition.continuous = true;
-            state.recognition.interimResults = true;
-            state.recognition.lang = 'ru-RU';
+            try {
+                state.recognition = new SpeechRecognition();
+                state.recognition.continuous = true;
+                state.recognition.interimResults = true;
+                state.recognition.lang = 'ru-RU';
 
-            state.recognition.onstart = () => {
-                console.log('✅ Speech recognition started');
-                state.isListening = true;
-                document.getElementById('recordStatus').textContent = '🔴 Микрофон активен - говорите...';
-                document.getElementById('recordStatus').className = 'status recording';
-            };
+                state.recognition.onstart = () => {
+                    console.log('🎙️ Recognition started');
+                    state.isListening = true;
+                    updateStatus('🔴 Микрофон активен', 'recording');
+                };
 
-            state.recognition.onresult = (event) => {
-                let interimTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const transcript = event.results[i][0].transcript;
-                    if (event.results[i].isFinal) {
-                        state.transcript += transcript + ' ';
-                        console.log('✅ Final:', transcript);
-                    } else {
-                        interimTranscript += transcript;
-                    }
-                }
-                document.getElementById('liveTranscript').value = state.transcript + interimTranscript;
-            };
-
-            state.recognition.onerror = (event) => {
-                console.error('❌ Speech recognition error:', event.error);
-                let errorMsg = '❌ Ошибка: ' + event.error;
-                if (event.error === 'no-speech') errorMsg = '⚠️ Речь не обнаружена - говорите громче';
-                if (event.error === 'network') errorMsg = '❌ Нет интернета - требуется подключение';
-                document.getElementById('recordStatus').textContent = errorMsg;
-            };
-
-            state.recognition.onend = () => {
-                console.log('Speech recognition ended');
-                state.isListening = false;
-                
-                // AUTO-RESTART if recording is still active
-                if (state.isRecording) {
-                    console.log('Auto-restarting recognition...');
-                    setTimeout(() => {
-                        try {
-                            state.recognition.start();
-                        } catch (e) {
-                            console.log('Restart error:', e.message);
+                state.recognition.onresult = (event) => {
+                    let interim = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            state.transcript += transcript + ' ';
+                        } else {
+                            interim += transcript;
                         }
-                    }, 500);
-                }
-            };
+                    }
+                    document.getElementById('liveTranscript').value = state.transcript + interim;
+                };
 
-            console.log('✅ Speech recognition initialized');
+                state.recognition.onerror = (event) => {
+                    console.error('❌ Error:', event.error);
+                    updateStatus('⚠️ ' + event.error, 'error');
+                };
+
+                state.recognition.onend = () => {
+                    console.log('🛑 Recognition ended');
+                    state.isListening = false;
+                    if (state.isRecording) {
+                        setTimeout(() => {
+                            try {
+                                state.recognition.start();
+                            } catch (e) {
+                                console.log('Restart failed:', e.message);
+                            }
+                        }, 500);
+                    }
+                };
+
+                console.log('✅ Speech Recognition ready');
+            } catch (e) {
+                console.error('Error initializing recognition:', e);
+            }
         }
 
         // START RECORDING
         window.startRecording = function() {
-            console.log('▶️ startRecording clicked');
-
             state.isRecording = true;
             state.recordingTime = 0;
             state.transcript = '';
+            
             document.getElementById('recordBtn').disabled = true;
             document.getElementById('stopBtn').disabled = false;
-            document.getElementById('recordStatus').textContent = '🔵 Запись началась - нажмите "Включить микрофон"';
-            document.getElementById('recordStatus').className = 'status';
             document.getElementById('liveTranscript').value = '';
+            
+            updateStatus('🔵 Запись началась', '');
 
             state.recordingTimer = setInterval(() => {
                 state.recordingTime++;
-                const mins = Math.floor(state.recordingTime / 60);
-                const secs = state.recordingTime % 60;
+                const m = Math.floor(state.recordingTime / 60);
+                const s = state.recordingTime % 60;
                 document.getElementById('timer').textContent = 
-                    `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                    `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
             }, 1000);
 
-            console.log('✅ Recording started');
+            console.log('▶️ Recording started');
         };
 
         // STOP RECORDING
         window.stopRecording = function() {
-            console.log('⏹️ stopRecording clicked');
             if (!state.isRecording) return;
 
             state.isRecording = false;
             clearInterval(state.recordingTimer);
+            
             document.getElementById('recordBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
-            document.getElementById('recordStatus').textContent = '✅ Запись завершена';
-            document.getElementById('recordStatus').className = 'status';
+            
+            updateStatus('✅ Запись завершена', '');
 
             if (state.isListening && state.recognition) {
-                console.log('Stopping recognition...');
                 try {
                     state.recognition.stop();
                 } catch (e) {
@@ -451,24 +468,24 @@
                 }
             }
 
-            // Анализируем сразу после остановки
+            // Analyze and save
             setTimeout(() => {
                 analyzeTranscript();
                 saveRecording();
             }, 500);
+
+            console.log('⏹️ Recording stopped');
         };
 
         // ENABLE MICROPHONE
         window.enableMicrophone = function() {
-            console.log('🎙️ enableMicrophone clicked');
-            
             if (!state.isRecording) {
-                alert('❌ Сначала нажмите "🎙️ Начать запись"');
+                alert('❌ Сначала нажмите "Начать"');
                 return;
             }
 
             if (!state.recognition) {
-                alert('❌ Распознавание речи не доступно');
+                alert('❌ Speech Recognition не поддерживается');
                 return;
             }
 
@@ -477,130 +494,154 @@
                 return;
             }
 
-            // Request microphone permission and start recognition
-            console.log('Requesting microphone permission...');
+            console.log('🎤 Requesting microphone...');
+            
             navigator.mediaDevices.getUserMedia({ audio: true })
                 .then(stream => {
-                    console.log('✅ Microphone permission granted');
+                    console.log('✅ Microphone granted');
                     state.mediaStream = stream;
                     
-                    // Start recognition
                     if (!state.isListening) {
                         try {
                             state.recognition.start();
                             console.log('✅ Recognition started');
-                            alert('✅ Микрофон включен! Говорите...');
+                            alert('✅ Микрофон включен!\nГоворите четко...');
                         } catch (e) {
-                            console.error('❌ Error starting recognition:', e.message);
+                            console.error('❌ Start error:', e.message);
                             alert('❌ Ошибка: ' + e.message);
                         }
                     }
                 })
                 .catch(error => {
                     console.error('❌ Microphone error:', error.name, error.message);
-                    let msg = '❌ Ошибка доступа к микрофону: ' + error.message;
                     
-                    if (error.name === 'NotAllowedError') {
-                        msg = '❌ Разрешение на микрофон отклонено. Проверьте настройки браузера.';
-                    } else if (error.name === 'NotFoundError') {
-                        msg = '❌ Микрофон не найден на устройстве.';
-                    } else if (error.name === 'NotSupportedError') {
-                        msg = '❌ Используется HTTP вместо HTTPS. Требуется безопасное соединение.';
-                    }
+                    let msg = '❌ ' + error.message;
+                    if (error.name === 'NotAllowedError') msg = '❌ Разрешение отклонено';
+                    if (error.name === 'NotFoundError') msg = '❌ Микрофон не найден';
+                    if (error.name === 'NotSupportedError') msg = '❌ Используйте HTTPS!';
                     
                     alert(msg);
                 });
         };
 
-        // CLEAR TRANSCRIPT
-        window.clearTranscript = function() {
-            if (confirm('Очистить текст диалога?')) {
-                state.transcript = '';
-                document.getElementById('liveTranscript').value = '';
-                document.getElementById('analysisResult').innerHTML = '<div style="color: var(--color-text-secondary); text-align: center; padding: 20px;">Здесь появится анализ после остановки записи</div>';
-            }
-        };
-
-        // ANALYZE TRANSCRIPT
-        function analyzeTranscript() {
-            console.log('✨ analyzeTranscript called');
-            if (!state.transcript.trim()) {
-                document.getElementById('analysisResult').innerHTML = '<div style="color: var(--color-error); text-align: center; padding: 20px;">❌ Нет текста для анализа</div>';
+        // TEST RECOGNITION
+        window.testRecognition = function() {
+            if (!state.recognition) {
+                alert('❌ Speech Recognition недоступна');
                 return;
             }
 
-            const fullText = state.transcript.toLowerCase();
+            console.log('🧪 Testing recognition...');
+            updateStatus('🧪 Тест... Скажите "тест"', 'recording');
             
-            // 1. КЛЮЧЕВЫЕ СЛОВА (по частоте)
-            const stopWords = ['и', 'в', 'на', 'с', 'по', 'то', 'что', 'из', 'за', 'от', 'до', 'как', 'это', 'или', 'он', 'она', 'они', 'мы', 'вы', 'я', 'ты', 'нас', 'вас', 'меня', 'тебя', 'нее', 'его', 'ее', 'их', 'будет', 'будут', 'есть', 'являются', 'был', 'была', 'были', 'быть', 'а', 'но', 'их', 'для', 'при', 'к', 'не', 'ни'];
+            try {
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                        state.mediaStream = stream;
+                        state.recognition.start();
+                        
+                        setTimeout(() => {
+                            state.recognition.stop();
+                            updateStatus('✅ Тест завершен', '');
+                        }, 3000);
+                    })
+                    .catch(e => {
+                        console.error('❌ Test error:', e.message);
+                        updateStatus('❌ Ошибка микрофона', 'error');
+                    });
+            } catch (e) {
+                console.error('❌ Test failed:', e.message);
+                updateStatus('❌ Тест не удался', 'error');
+            }
+        };
+
+        // CLEAR TRANSCRIPT
+        window.clearTranscript = function() {
+            if (confirm('Очистить?')) {
+                state.transcript = '';
+                document.getElementById('liveTranscript').value = '';
+                document.getElementById('analysisResult').innerHTML = 
+                    '<div style="color: var(--color-text-secondary); text-align: center; padding: 40px 20px;">⏳ Нажмите "Стоп" для анализа</div>';
+            }
+        };
+
+        // ANALYZE
+        function analyzeTranscript() {
+            const text = state.transcript.trim();
             
-            const words = fullText.match(/\b[а-яё]{3,}\b/g) || [];
-            const wordFreq = {};
-            words.forEach(word => {
-                if (!stopWords.includes(word) && word.length > 3) {
-                    wordFreq[word] = (wordFreq[word] || 0) + 1;
-                }
+            if (!text) {
+                document.getElementById('analysisResult').innerHTML = 
+                    '<div style="color: var(--color-error); text-align: center; padding: 40px;">❌ Нет текста</div>';
+                return;
+            }
+
+            const lower = text.toLowerCase();
+            
+            // Keywords
+            const stopWords = ['и', 'в', 'на', 'с', 'по', 'то', 'что', 'из', 'за', 'от', 'до', 'как', 'это', 'или', 'он', 'она', 'они', 'мы', 'вы', 'я', 'ты', 'нас', 'вас', 'меня', 'тебя', 'нее', 'его', 'ее', 'их', 'будет', 'будут', 'есть', 'является', 'был', 'была', 'были', 'быть', 'а', 'но', 'для', 'при', 'к', 'не', 'ни'];
+            
+            const words = lower.match(/\b[а-яё]{3,}\b/g) || [];
+            const freq = {};
+            words.forEach(w => {
+                if (!stopWords.includes(w)) freq[w] = (freq[w] || 0) + 1;
             });
 
-            const topWords = Object.entries(wordFreq)
+            const topWords = Object.entries(freq)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 5)
-                .map(entry => entry[0]);
+                .map(e => e[0]);
 
-            // 2. КЛЮЧЕВЫЕ МОМЕНТЫ
-            const keyMomentKeywords = ['важно', 'критично', 'срочно', 'должны', 'нужно', 'сделать', 'задача', 'проблема', 'решено', 'согласились', 'договорились', 'решение', 'необходимо', 'конечно', 'точно', 'решили', 'выводы'];
-            const sentences = state.transcript.split(/[.!?]+/).filter(s => s.trim());
-            const keyMoments = sentences.filter(sent => 
-                keyMomentKeywords.some(kw => sent.toLowerCase().includes(kw))
+            // Key moments
+            const keyWords = ['важно', 'критично', 'срочно', 'должны', 'нужно', 'сделать', 'задача', 'проблема', 'решено', 'согласились', 'договорились', 'решение'];
+            const sentences = text.split(/[.!?]+/).filter(s => s.trim());
+            const keyMoments = sentences.filter(s => 
+                keyWords.some(kw => s.toLowerCase().includes(kw))
             ).slice(0, 3);
 
-            // 3. ЗАДАЧИ
-            const taskKeywords = ['нужно', 'сделать', 'провести', 'подготовить', 'отправить', 'проверить', 'подумать', 'уточнить', 'обсудить', 'согласовать', 'узнать', 'выяснить'];
-            const tasks = sentences.filter(sent => 
-                taskKeywords.some(kw => sent.toLowerCase().includes(kw))
+            // Tasks
+            const taskWords = ['нужно', 'сделать', 'провести', 'подготовить', 'отправить', 'проверить', 'обсудить', 'согласовать'];
+            const tasks = sentences.filter(s => 
+                taskWords.some(kw => s.toLowerCase().includes(kw))
             ).slice(0, 3);
 
-            // 4. ОБЩАЯ СТАТИСТИКА
-            const totalWords = state.transcript.split(/\s+/).length;
+            const totalWords = text.split(/\s+/).length;
 
-            // 5. ФОРМИРУЕМ РЕЗЮМЕ
-            const result = `
+            // HTML
+            const html = `
                 <div class="analysis-section">
-                    <div class="analysis-title">📋 КРАТКОЕ РЕЗЮМЕ</div>
-                    <div style="font-size: 12px; line-height: 1.6; margin-bottom: 8px;">
-                        Встреча: <strong>${state.recordingTime > 0 ? Math.floor(state.recordingTime / 60) + ' мин ' + (state.recordingTime % 60) + ' сек' : 'менее минуты'}</strong><br>
-                        Объем: <strong>~${totalWords} слов</strong><br>
-                        ${topWords.length > 0 ? `Основные темы: <strong>${topWords.join(', ')}</strong>` : 'Анализ текста...'}
+                    <div class="analysis-title">📋 РЕЗЮМЕ</div>
+                    <div style="font-size: 12px; line-height: 1.7;">
+                        ⏱️ <strong>${Math.floor(state.recordingTime / 60)} мин ${state.recordingTime % 60} сек</strong><br>
+                        📝 <strong>~${totalWords} слов</strong><br>
+                        ${topWords.length > 0 ? `🔑 <strong>${topWords.join(', ')}</strong>` : ''}
                     </div>
                 </div>
 
                 ${keyMoments.length > 0 ? `
                 <div class="analysis-section">
-                    <div class="analysis-title">🎯 КЛЮЧЕВЫЕ МОМЕНТЫ</div>
-                    ${keyMoments.map(m => `<div class="analysis-item">• ${m.trim().substring(0, 100)}...</div>`).join('')}
+                    <div class="analysis-title">⭐ КЛЮЧЕВЫЕ МОМЕНТЫ</div>
+                    ${keyMoments.map(m => `<div class="analysis-item">• ${m.trim().substring(0, 80)}</div>`).join('')}
                 </div>
                 ` : ''}
 
                 ${tasks.length > 0 ? `
                 <div class="analysis-section">
-                    <div class="analysis-title">✅ ЗАДАЧИ И ДЕЙСТВИЯ</div>
-                    ${tasks.map((task, idx) => `<div class="analysis-item">${idx + 1}. ${task.trim().substring(0, 100)}...</div>`).join('')}
+                    <div class="analysis-title">✅ ЗАДАЧИ</div>
+                    ${tasks.map((t, i) => `<div class="analysis-item">${i + 1}. ${t.trim().substring(0, 80)}</div>`).join('')}
                 </div>
                 ` : ''}
-
-                <div style="margin-top: 12px; font-size: 11px; color: var(--color-text-secondary); text-align: center;">
-                    ✨ Анализ завершен
-                </div>
             `;
 
-            document.getElementById('analysisResult').innerHTML = result;
-            console.log('✅ Analysis complete');
+            document.getElementById('analysisResult').innerHTML = html;
+            console.log('✅ Analysis done');
         }
 
-        // SAVE RECORDING
+        // SAVE
         function saveRecording() {
-            const title = document.getElementById('meetingTitle').value || `Встреча ${new Date().toLocaleString('ru-RU')}`;
-            const recording = {
+            const title = document.getElementById('meetingTitle').value || 
+                         `Встреча ${new Date().toLocaleString('ru-RU')}`;
+            
+            const rec = {
                 id: Date.now(),
                 title: title,
                 date: new Date().toLocaleString('ru-RU'),
@@ -608,22 +649,18 @@
                 transcript: state.transcript
             };
 
-            state.recordings.push(recording);
-            saveToLocalStorage();
+            state.recordings.push(rec);
+            localStorage.setItem('meetingRecordings', JSON.stringify(state.recordings));
             updateRecordingsList();
-            console.log('✅ Recording saved');
             
-            // Reset
             document.getElementById('meetingTitle').value = '';
             document.getElementById('timer').textContent = '00:00';
             state.transcript = '';
+            
+            console.log('💾 Saved');
         }
 
-        // LOCAL STORAGE
-        function saveToLocalStorage() {
-            localStorage.setItem('meetingRecordings', JSON.stringify(state.recordings));
-        }
-
+        // LOAD
         function loadRecordings() {
             const saved = localStorage.getItem('meetingRecordings');
             if (saved) {
@@ -632,31 +669,41 @@
             }
         }
 
+        // UPDATE LIST
         function updateRecordingsList() {
             const list = document.getElementById('recordingsList');
             
-            if (state.recordings.length === 0) {
-                list.innerHTML = '<div style="text-align: center; color: var(--color-text-secondary); padding: 20px;">Нет сохраненных встреч</div>';
+            if (!state.recordings.length) {
+                list.innerHTML = '<div style="color: var(--color-text-secondary); text-align: center; padding: 30px;">Нет встреч</div>';
                 return;
             }
 
             list.innerHTML = state.recordings.map((rec, i) => `
                 <div class="recording-item">
-                    <div style="font-weight: 600; color: var(--color-text);">${rec.title}</div>
-                    <div style="font-size: 12px; color: var(--color-text-secondary);">${rec.date} • ${Math.floor(rec.duration / 60)}:${String(rec.duration % 60).padStart(2, '0')}</div>
-                    <div style="font-size: 12px; margin-top: 4px; color: var(--color-primary);">💬 ~${rec.transcript.split(/\s+/).length} слов</div>
-                    <button onclick="window.deleteRecording(${i})" class="danger" style="padding: 4px 8px; font-size: 12px; min-width: 60px; margin-top: 8px;">Удалить</button>
+                    <div style="font-weight: 700; color: var(--color-text);">${rec.title}</div>
+                    <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">
+                        ${rec.date} • ${Math.floor(rec.duration / 60)}:${String(rec.duration % 60).padStart(2, '0')} • ~${rec.transcript.split(/\s+/).length} слов
+                    </div>
+                    <button onclick="window.deleteRecording(${i})" class="danger" style="padding: 6px 12px; font-size: 11px; margin-top: 8px;">Удалить</button>
                 </div>
             `).join('');
         }
 
-        window.deleteRecording = function(index) {
-            if (confirm('Удалить эту встречу?')) {
-                state.recordings.splice(index, 1);
-                saveToLocalStorage();
+        // DELETE
+        window.deleteRecording = function(i) {
+            if (confirm('Удалить?')) {
+                state.recordings.splice(i, 1);
+                localStorage.setItem('meetingRecordings', JSON.stringify(state.recordings));
                 updateRecordingsList();
             }
         };
+
+        // STATUS
+        function updateStatus(msg, cls) {
+            const elem = document.getElementById('recordStatus');
+            elem.textContent = msg;
+            elem.className = 'status' + (cls ? ' ' + cls : '');
+        }
     </script>
 </body>
 </html>
