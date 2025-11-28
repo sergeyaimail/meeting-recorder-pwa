@@ -3,202 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Запись и анализ встреч в реальном времени">
     <meta name="theme-color" content="#1f2121">
-    <title>Meeting Recorder AI</title>
+    <title>Диктофон совещаний</title>
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoi0JTQuNC60YLQvtGE0L7QvSDRgdC+0LLQtdGJ0LDQvdC40LkiLCJzaG9ydF9uYW1lIjoi0JTQuNC60YLQvtGE0L7QvSIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMWYyMTIxIiwidGhlbWVfY29sb3IiOiIjMWYyMTIxIn0=">
     <style>
         :root {
             --color-primary: #00D9FF;
             --color-secondary: #D946EF;
-            --color-accent-gold: #FFD700;
-            --color-accent-silver: #C0C0C0;
-            --color-bg: #1f2121;
-            --color-surface: #2a2c2c;
-            --color-text: #ffffff;
-            --color-text-secondary: #b0b0b0;
-            --color-success: #32b8c6;
             --color-warning: #e68661;
             --color-error: #c01537;
-            --focus-ring: 0 0 0 3px rgba(0, 217, 255, 0.4);
+            --color-success: #10b981;
+            --color-bg: #1f2121;
+            --color-surface: #2a2c2c;
+            --color-text: #f5f5f5;
+            --color-text-secondary: #a7a9a9;
+            --color-border: rgba(119, 124, 124, 0.3);
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
 
-        html, body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        body {
+            font-family: var(--font-family);
             background: var(--color-bg);
             color: var(--color-text);
-            line-height: 1.5;
-        }
-
-        body {
-            padding: 12px;
-            overflow-x: hidden;
+            line-height: 1.6;
+            padding: 16px;
+            min-height: 100vh;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
         }
 
-        header {
-            background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(217, 70, 239, 0.1));
-            border: 1px solid rgba(0, 217, 255, 0.3);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
+        h1 {
+            font-size: 24px;
+            margin-bottom: 24px;
             text-align: center;
         }
 
-        h1 {
-            margin: 0;
-            font-size: 28px;
-            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .card {
+        .status-bar {
             background: var(--color-surface);
-            border: 1px solid rgba(0, 217, 255, 0.2);
-            border-radius: 10px;
             padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 1px solid var(--color-border);
         }
 
-        .card-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin: 0 0 12px 0;
-            color: var(--color-primary);
-        }
-
-        .controls {
+        .status-row {
             display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        button {
-            flex: 1;
-            min-width: 100px;
-            padding: 10px 16px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 150ms ease;
-            background: var(--color-primary);
-            color: var(--color-bg);
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 217, 255, 0.3);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        button:focus-visible {
-            outline: none;
-            box-shadow: var(--focus-ring);
-        }
-
-        button.secondary {
-            background: var(--color-secondary);
-            color: var(--color-text);
-        }
-
-        button.secondary:hover {
-            box-shadow: 0 4px 12px rgba(217, 70, 239, 0.3);
-        }
-
-        button.danger {
-            background: var(--color-error);
-            color: var(--color-text);
-        }
-
-        button.danger:hover {
-            box-shadow: 0 4px 12px rgba(192, 21, 47, 0.3);
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .input-group {
-            display: flex;
-            gap: 8px;
+            justify-content: space-between;
             align-items: center;
+            margin-bottom: 8px;
         }
 
-        input[type="text"],
-        textarea,
-        select {
-            flex: 1;
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(0, 217, 255, 0.2);
-            border-radius: 6px;
-            color: var(--color-text);
+        .status-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .status-label {
+            color: var(--color-text-secondary);
             font-size: 14px;
         }
 
-        input[type="text"]:focus,
-        textarea:focus,
-        select:focus {
-            outline: none;
-            border-color: var(--color-primary);
-            box-shadow: var(--focus-ring);
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 80px;
-            font-family: monospace;
-        }
-
-        .status {
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 13px;
+        .status-value {
             font-weight: 500;
-            margin: 8px 0;
         }
 
-        .status.recording {
-            background: rgba(255, 84, 89, 0.2);
-            color: #ff5459;
-            border: 1px solid #ff5459;
-            animation: pulse 1.5s ease-in-out infinite;
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status-indicator.active {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--color-success);
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.inactive {
+            background: rgba(192, 21, 47, 0.15);
+            color: var(--color-error);
+        }
+
+        .status-indicator.ready {
+            background: rgba(0, 217, 255, 0.15);
+            color: var(--color-primary);
         }
 
         @keyframes pulse {
@@ -206,750 +106,291 @@
             50% { opacity: 0.6; }
         }
 
-        .status.idle {
-            background: rgba(0, 217, 255, 0.1);
-            color: var(--color-primary);
-            border: 1px solid var(--color-primary);
+        .card {
+            background: var(--color-surface);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 1px solid var(--color-border);
         }
 
-        .transcript-box {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(0, 217, 255, 0.2);
-            border-radius: 8px;
-            padding: 12px;
-            max-height: 150px;
-            overflow-y: auto;
-            font-size: 13px;
-            line-height: 1.6;
-            margin: 12px 0;
+        .form-group {
+            margin-bottom: 16px;
         }
 
-        .participant-label {
-            color: var(--color-secondary);
-            font-weight: 600;
-        }
-
-        .key-moment {
-            background: rgba(217, 70, 239, 0.1);
-            border-left: 3px solid var(--color-secondary);
-            padding: 8px;
-            margin: 6px 0;
-            border-radius: 4px;
-        }
-
-        .task-item {
-            background: rgba(0, 217, 255, 0.1);
-            border-left: 3px solid var(--color-primary);
-            padding: 10px;
-            margin: 8px 0;
-            border-radius: 4px;
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-        }
-
-        .task-checkbox {
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
-
-        .task-text {
-            flex: 1;
-        }
-
-        .summary-section {
-            margin: 16px 0;
-        }
-
-        .summary-section h3 {
-            color: var(--color-primary);
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
             font-size: 14px;
-            margin: 12px 0 8px 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
-        .recordings-list {
-            max-height: 250px;
-            overflow-y: auto;
-        }
-
-        .recording-item {
-            background: rgba(0, 217, 255, 0.1);
-            border: 1px solid rgba(0, 217, 255, 0.2);
-            border-radius: 6px;
-            padding: 10px;
-            margin: 8px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .recording-info {
-            flex: 1;
-        }
-
-        .recording-name {
-            font-weight: 600;
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
             color: var(--color-text);
-            font-size: 13px;
+            font-family: inherit;
+            font-size: 14px;
         }
 
-        .recording-time {
-            font-size: 12px;
-            color: var(--color-text-secondary);
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+            font-family: inherit;
         }
 
-        .recording-actions {
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+
+        .btn-group {
             display: flex;
-            gap: 6px;
-        }
-
-        .btn-small {
-            padding: 6px 10px;
-            font-size: 12px;
-            min-width: 60px;
-        }
-
-        .export-section {
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid rgba(0, 217, 255, 0.1);
-        }
-
-        .tabs {
-            display: flex;
-            gap: 8px;
+            gap: 12px;
             margin-bottom: 16px;
             flex-wrap: wrap;
         }
 
-        .tab-btn {
-            padding: 8px 16px;
-            background: rgba(0, 217, 255, 0.1);
-            border: 1px solid rgba(0, 217, 255, 0.3);
-            color: var(--color-text);
-            border-radius: 6px;
+        button {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 150ms ease;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: var(--color-bg);
+        }
+
+        .btn-primary:hover {
+            background: #00b8db;
+        }
+
+        .btn-primary:disabled {
+            background: var(--color-border);
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--color-secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #c738d4;
+        }
+
+        .btn-warning {
+            background: var(--color-warning);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--color-success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--color-error);
+            color: white;
+        }
+
+        .recordings-list {
+            margin-top: 24px;
+        }
+
+        .recording-item {
+            background: var(--color-surface);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid var(--color-border);
+        }
+
+        .recording-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .recording-title {
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+        .recording-meta {
+            color: var(--color-text-secondary);
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .recording-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .recording-actions button {
+            flex: none;
+            min-width: auto;
+            padding: 8px 16px;
             font-size: 13px;
         }
 
-        .tab-btn.active {
-            background: var(--color-primary);
-            color: var(--color-bg);
-            border-color: var(--color-primary);
+        .analysis-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--color-border);
         }
 
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--color-text-secondary);
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .time-display {
-            font-size: 20px;
-            font-weight: 700;
+        .analysis-section h4 {
+            margin-bottom: 8px;
             color: var(--color-primary);
-            text-align: center;
-            margin: 12px 0;
-            font-family: monospace;
-            letter-spacing: 2px;
         }
 
-        .participant-input {
-            background: rgba(217, 70, 239, 0.1);
-            border: 1px solid var(--color-secondary);
+        .analysis-section ul {
+            padding-left: 20px;
+            color: var(--color-text-secondary);
         }
 
-        .participant-input:focus {
-            border-color: var(--color-secondary);
+        .analysis-section li {
+            margin-bottom: 4px;
+        }
+
+        .mic-help {
+            background: rgba(0, 217, 255, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            border: 1px solid rgba(0, 217, 255, 0.2);
+        }
+
+        .error-message {
+            background: rgba(192, 21, 47, 0.15);
+            color: var(--color-error);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            border: 1px solid rgba(192, 21, 47, 0.3);
+        }
+
+        .participant-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(0, 217, 255, 0.15);
+            color: var(--color-primary);
+            border-radius: 16px;
+            font-size: 13px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>🎤 Meeting Recorder AI</h1>
-        </header>
+        <h1>🎙️ Диктофон совещаний</h1>
 
-        <div class="grid">
-            <!-- Recording Section -->
-            <div class="card">
-                <div class="card-title">📹 Запись встречи</div>
-                
-                <div class="controls">
-                    <div>
-                        <label class="label">Участники встречи</label>
-                        <div class="input-group">
-                            <input type="text" id="participantInput" placeholder="Имя участника" />
-                            <button onclick="addParticipant()" style="flex: 0 0 auto; min-width: 80px;">Добавить</button>
-                        </div>
-                    </div>
-
-                    <div id="participantsList" style="font-size: 12px; color: var(--color-secondary); margin: 8px 0;"></div>
-
-                    <div>
-                        <label class="label">Описание встречи</label>
-                        <input type="text" id="meetingTitle" placeholder="Название встречи" />
-                    </div>
-
-                    <div>
-                        <div class="time-display" id="timer">00:00</div>
-                        <div id="recordStatus" class="status idle">🔵 Готово к записи</div>
-                    </div>
-
-                    <div class="button-group">
-                        <button id="recordBtn" onclick="startRecording()">▶️ Начать</button>
-                        <button id="stopBtn" onclick="stopRecording()" disabled style="background: var(--color-secondary);">⏹️ Стоп</button>
-                    </div>
-
-                    <div>
-                        <label class="label">Говорит участник</label>
-                        <select id="currentSpeaker">
-                            <option value="">Выбрать участника...</option>
-                        </select>
-                    </div>
-
-                    <textarea id="liveTranscript" placeholder="Введите или разрешьте микрофон для записи" readonly></textarea>
-
-                    <div class="button-group">
-                        <button onclick="toggleMicrophone()" style="background: var(--color-warning);">🎙️ Включить микрофон</button>
-                        <button onclick="clearTranscript()" class="danger">🗑️ Очистить</button>
-                    </div>
-                </div>
+        <div class="status-bar">
+            <div class="status-row">
+                <span class="status-label">Статус:</span>
+                <span class="status-value" id="statusText">Не начато</span>
             </div>
-
-            <!-- Analysis Section -->
-            <div class="card">
-                <div class="card-title">🔍 Анализ диалога</div>
-                
-                <div class="controls">
-                    <button onclick="analyzeTranscript()" style="background: var(--color-secondary); margin-bottom: 12px;">✨ Анализировать</button>
-
-                    <div class="tabs">
-                        <button class="tab-btn active" onclick="switchTab('summary')">Резюме</button>
-                        <button class="tab-btn" onclick="switchTab('moments')">Ключевые моменты</button>
-                        <button class="tab-btn" onclick="switchTab('tasks')">Задачи</button>
-                    </div>
-
-                    <!-- Summary Tab -->
-                    <div id="summary" class="tab-content active">
-                        <div class="summary-section">
-                            <h3>🎯 Участники</h3>
-                            <div id="summaryParticipants" style="font-size: 13px; line-height: 1.8;"></div>
-                        </div>
-
-                        <div class="summary-section">
-                            <h3>📝 Основные пункты</h3>
-                            <div id="summaryPoints" style="font-size: 13px; line-height: 1.8;"></div>
-                        </div>
-                    </div>
-
-                    <!-- Key Moments Tab -->
-                    <div id="moments" class="tab-content">
-                        <div id="keyMoments" style="max-height: 300px; overflow-y: auto;"></div>
-                    </div>
-
-                    <!-- Tasks Tab -->
-                    <div id="tasks" class="tab-content">
-                        <div id="tasksList" style="max-height: 300px; overflow-y: auto;"></div>
-                        <div style="margin-top: 12px; display: flex; gap: 8px;">
-                            <input type="text" id="taskInput" placeholder="Добавить новую задачу..." />
-                            <button onclick="addTask()" style="flex: 0 0 auto; min-width: 70px;">Добавить</button>
-                        </div>
-                    </div>
-                </div>
+            <div class="status-row">
+                <span class="status-label">Микрофон:</span>
+                <span class="status-indicator inactive" id="micStatus">⚫ Отключен</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">Время записи:</span>
+                <span class="status-value" id="timerDisplay">00:00:00</span>
             </div>
         </div>
 
-        <!-- Recordings Section -->
-        <div class="card">
-            <div class="card-title">💾 Сохраненные встречи</div>
-            
-            <div class="recordings-list" id="recordingsList"></div>
+        <div id="errorContainer"></div>
 
-            <div class="export-section">
-                <label class="label">Экспорт</label>
-                <div class="button-group">
-                    <button onclick="exportAsText()">📄 Экспортировать текст</button>
-                    <button onclick="exportAsJSON()">📋 Экспортировать JSON</button>
-                    <button onclick="exportAsMarkdown()">📑 Экспортировать Markdown</button>
-                </div>
+        <div class="card">
+            <div class="form-group">
+                <label for="meetingTopic">Тема совещания:</label>
+                <input type="text" id="meetingTopic" placeholder="Например: Планерка команды">
             </div>
+
+            <div class="form-group">
+                <label for="participantInput">Участники:</label>
+                <input type="text" id="participantInput" placeholder="Введите имя и нажмите Enter">
+                <div id="participantsList" style="margin-top: 8px;"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="currentSpeaker">Кто говорит сейчас:</label>
+                <select id="currentSpeaker">
+                    <option value="">Не выбрано</option>
+                </select>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-primary" id="startBtn">▶️ Начать</button>
+                <button class="btn-warning" id="stopBtn" disabled>⏹️ Стоп</button>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-success" id="micBtn" disabled>🎙️ Включить микрофон</button>
+                <button class="btn-danger" id="micStopBtn" disabled>🔇 Выключить микрофон</button>
+            </div>
+
+            <div class="mic-help">
+                💡 <strong>Как пользоваться:</strong><br>
+                1. Нажмите "Начать" чтобы запустить таймер<br>
+                2. Нажмите "Включить микрофон" - браузер запросит разрешение<br>
+                3. Разрешите доступ к микрофону<br>
+                4. Говорите - текст будет появляться автоматически<br>
+                5. Вы также можете редактировать текст вручную
+            </div>
+
+            <div class="form-group" style="margin-top: 16px;">
+                <label for="transcriptText">Транскрипция (автоматическая + ручная):</label>
+                <textarea id="transcriptText" placeholder="Текст будет появляться здесь автоматически, когда вы включите микрофон. Вы также можете печатать вручную."></textarea>
+            </div>
+
+            <button class="btn-secondary" id="analyzeBtn" disabled>✨ Анализировать</button>
+        </div>
+
+        <div class="recordings-list">
+            <h2 style="margin-bottom: 16px;">📋 Сохраненные записи</h2>
+            <div id="recordingsList"></div>
         </div>
     </div>
 
-    <script>
-        // State management
-        const state = {
-            isRecording: false,
-            recordingTime: 0,
-            recordingTimer: null,
-            transcript: '',
-            participants: [],
-            currentSpeaker: '',
-            recordings: [],
-            currentAnalysis: null,
-            tasks: [],
-            recognition: null,
-            mediaRecorder: null,
-            audioChunks: []
-        };
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            loadRecordings();
-            initializeSpeechRecognition();
-        });
-
-        // Speech Recognition Setup
-        function initializeSpeechRecognition() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (SpeechRecognition) {
-                state.recognition = new SpeechRecognition();
-                state.recognition.continuous = true;
-                state.recognition.interimResults = true;
-                state.recognition.lang = 'ru-RU';
-
-                state.recognition.onstart = () => {
-                    document.getElementById('recordStatus').textContent = '🔴 Запись активна';
-                    document.getElementById('recordStatus').className = 'status recording';
-                };
-
-                state.recognition.onresult = (event) => {
-                    let interimTranscript = '';
-                    for (let i = event.resultIndex; i < event.results.length; i++) {
-                        const transcript = event.results[i][0].transcript;
-                        if (event.results[i].isFinal) {
-                            if (state.currentSpeaker) {
-                                state.transcript += `\n${state.currentSpeaker}: ${transcript}`;
-                            } else {
-                                state.transcript += `\n${transcript}`;
-                            }
-                        } else {
-                            interimTranscript += transcript;
-                        }
-                    }
-                    document.getElementById('liveTranscript').value = state.transcript + interimTranscript;
-                };
-
-                state.recognition.onerror = (event) => {
-                    console.error('Speech recognition error', event.error);
-                };
-
-                state.recognition.onend = () => {
-                    if (state.isRecording) {
-                        state.recognition.start();
-                    }
-                };
-            }
-        }
-
-        function addParticipant() {
-            const input = document.getElementById('participantInput');
-            const name = input.value.trim();
-            if (name && !state.participants.includes(name)) {
-                state.participants.push(name);
-                input.value = '';
-                updateParticipantsList();
-                updateSpeakerSelect();
-            }
-        }
-
-        function updateParticipantsList() {
-            const list = document.getElementById('participantsList');
-            list.innerHTML = state.participants.map((p, i) => 
-                `<span style="display: inline-block; margin-right: 8px; padding: 4px 8px; background: rgba(217, 70, 239, 0.2); border-radius: 4px;">
-                    ${p} <button onclick="removeParticipant(${i})" style="background: none; border: none; color: var(--color-error); cursor: pointer; padding: 0; margin-left: 4px;">✕</button>
-                </span>`
-            ).join('');
-        }
-
-        function removeParticipant(index) {
-            state.participants.splice(index, 1);
-            updateParticipantsList();
-            updateSpeakerSelect();
-        }
-
-        function updateSpeakerSelect() {
-            const select = document.getElementById('currentSpeaker');
-            const currentValue = select.value;
-            select.innerHTML = '<option value="">Выбрать участника...</option>' + 
-                state.participants.map(p => `<option value="${p}">${p}</option>`).join('');
-            select.value = currentValue;
-            select.addEventListener('change', (e) => {
-                state.currentSpeaker = e.target.value;
-            });
-        }
-
-        function startRecording() {
-            if (state.participants.length === 0) {
-                alert('Пожалуйста, добавьте участников встречи');
-                return;
-            }
-
-            state.isRecording = true;
-            state.recordingTime = 0;
-            state.transcript = '';
-            document.getElementById('recordBtn').disabled = true;
-            document.getElementById('stopBtn').disabled = false;
-            document.getElementById('recordStatus').textContent = '🔴 Запись активна';
-            document.getElementById('recordStatus').className = 'status recording';
-
-            if (state.recognition) {
-                state.recognition.start();
-            }
-
-            state.recordingTimer = setInterval(() => {
-                state.recordingTime++;
-                const mins = Math.floor(state.recordingTime / 60);
-                const secs = state.recordingTime % 60;
-                document.getElementById('timer').textContent = 
-                    `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-            }, 1000);
-        }
-
-        function stopRecording() {
-            state.isRecording = false;
-            clearInterval(state.recordingTimer);
-            document.getElementById('recordBtn').disabled = false;
-            document.getElementById('stopBtn').disabled = true;
-            document.getElementById('recordStatus').textContent = '✅ Запись завершена';
-            document.getElementById('recordStatus').className = 'status idle';
-
-            if (state.recognition) {
-                state.recognition.stop();
-            }
-
-            saveRecording();
-        }
-
-        function toggleMicrophone() {
-            if (state.recognition) {
-                if (state.isRecording) {
-                    state.recognition.start();
-                    alert('Микрофон включен. Говорите...');
-                } else {
-                    alert('Сначала начните запись');
-                }
-            } else {
-                alert('Ваш браузер не поддерживает распознавание речи. Введите текст вручную.');
-            }
-        }
-
-        function clearTranscript() {
-            if (confirm('Вы уверены? Транскрипция будет очищена.')) {
-                state.transcript = '';
-                document.getElementById('liveTranscript').value = '';
-            }
-        }
-
-        function saveRecording() {
-            const title = document.getElementById('meetingTitle').value || `Встреча ${new Date().toLocaleString('ru-RU')}`;
-            const recording = {
-                id: Date.now(),
-                title: title,
-                date: new Date().toLocaleString('ru-RU'),
-                duration: state.recordingTime,
-                participants: [...state.participants],
-                transcript: state.transcript,
-                analysis: null,
-                tasks: [...state.tasks]
-            };
-
-            state.recordings.push(recording);
-            saveToLocalStorage();
-            updateRecordingsList();
-            alert('Встреча сохранена!');
-            
-            // Reset
-            document.getElementById('meetingTitle').value = '';
-            document.getElementById('timer').textContent = '00:00';
-            state.tasks = [];
-            updateTasksList();
-        }
-
-        function analyzeTranscript() {
-            if (!state.transcript.trim()) {
-                alert('Пожалуйста, запишите или введите диалог');
-                return;
-            }
-
-            state.currentAnalysis = {
-                participants: state.participants,
-                keyMoments: extractKeyMoments(state.transcript),
-                tasks: extractTasks(state.transcript),
-                summary: generateSummary()
-            };
-
-            displayAnalysis();
-        }
-
-        function extractKeyMoments(text) {
-            const keywords = ['важно', 'критично', 'срочно', 'должны', 'необходимо', 'решено', 'согласились', 'договорились', 'проблема', 'риск'];
-            const lines = text.split('\n');
-            const moments = [];
-
-            lines.forEach(line => {
-                if (keywords.some(kw => line.toLowerCase().includes(kw))) {
-                    moments.push(line.trim());
-                }
-            });
-
-            return moments.length > 0 ? moments : ['Ключевые моменты не выявлены'];
-        }
-
-        function extractTasks(text) {
-            const taskKeywords = ['нужно', 'сделать', 'todo', 'задача', 'провести', 'подготовить', 'отправить', 'проверить'];
-            const lines = text.split('\n');
-            const tasks = [];
-
-            lines.forEach(line => {
-                const lowerLine = line.toLowerCase();
-                if (taskKeywords.some(kw => lowerLine.includes(kw))) {
-                    const match = line.match(/([А-Яа-я]+):\s*(.*)/);
-                    if (match) {
-                        tasks.push({
-                            text: match[2],
-                            assignee: match[1],
-                            completed: false
-                        });
-                    }
-                }
-            });
-
-            return tasks;
-        }
-
-        function generateSummary() {
-            const participantCount = state.participants.length;
-            const lineCount = state.transcript.split('\n').length;
-            
-            return {
-                participantCount: participantCount,
-                duration: `${Math.floor(state.recordingTime / 60)} мин ${state.recordingTime % 60} сек`,
-                linesCount: lineCount,
-                topics: extractTopics(state.transcript)
-            };
-        }
-
-        function extractTopics(text) {
-            const words = text.toLowerCase().split(/\s+/);
-            const common = ['участники', 'встреча', 'обсудили', 'согласились', 'решили'];
-            const topics = [];
-
-            words.forEach(word => {
-                if (word.length > 5 && !common.includes(word)) {
-                    if (!topics.includes(word)) {
-                        topics.push(word);
-                    }
-                }
-            });
-
-            return topics.slice(0, 5);
-        }
-
-        function displayAnalysis() {
-            if (!state.currentAnalysis) return;
-
-            // Summary Tab
-            document.getElementById('summaryParticipants').innerHTML = 
-                state.currentAnalysis.participants.map(p => `<div>👤 ${p}</div>`).join('');
-            
-            document.getElementById('summaryPoints').innerHTML = `
-                <div>📊 Продолжительность: ${state.currentAnalysis.summary.duration}</div>
-                <div>💬 Строк текста: ${state.currentAnalysis.summary.linesCount}</div>
-                <div>🎯 Темы: ${state.currentAnalysis.summary.topics.join(', ') || 'Не определены'}</div>
-            `;
-
-            // Key Moments Tab
-            document.getElementById('keyMoments').innerHTML = 
-                state.currentAnalysis.keyMoments.map(m => 
-                    `<div class="key-moment">${m}</div>`
-                ).join('');
-
-            // Tasks Tab
-            updateTasksList();
-        }
-
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-        }
-
-        function addTask() {
-            const input = document.getElementById('taskInput');
-            const taskText = input.value.trim();
-            
-            if (taskText) {
-                state.tasks.push({
-                    text: taskText,
-                    assignee: state.currentSpeaker || 'Без назначения',
-                    completed: false
-                });
-                input.value = '';
-                updateTasksList();
-            }
-        }
-
-        function updateTasksList() {
-            const list = document.getElementById('tasksList');
-            list.innerHTML = state.tasks.map((task, i) => `
-                <div class="task-item">
-                    <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} 
-                        onchange="toggleTask(${i})" />
-                    <div class="task-text">
-                        <div style="text-decoration: ${task.completed ? 'line-through' : 'none'};">${task.text}</div>
-                        <div style="font-size: 12px; color: var(--color-text-secondary);">👤 ${task.assignee}</div>
-                    </div>
-                    <button onclick="removeTask(${i})" class="danger" style="padding: 4px 8px; font-size: 12px; min-width: auto;">✕</button>
-                </div>
-            `).join('');
-        }
-
-        function toggleTask(index) {
-            state.tasks[index].completed = !state.tasks[index].completed;
-            updateTasksList();
-        }
-
-        function removeTask(index) {
-            state.tasks.splice(index, 1);
-            updateTasksList();
-        }
-
-        function saveToLocalStorage() {
-            localStorage.setItem('meetingRecordings', JSON.stringify(state.recordings));
-        }
-
-        function loadRecordings() {
-            const saved = localStorage.getItem('meetingRecordings');
-            if (saved) {
-                state.recordings = JSON.parse(saved);
-                updateRecordingsList();
-            }
-        }
-
-        function updateRecordingsList() {
-            const list = document.getElementById('recordingsList');
-            
-            if (state.recordings.length === 0) {
-                list.innerHTML = '<div style="text-align: center; color: var(--color-text-secondary); padding: 20px;">Нет сохраненных встреч</div>';
-                return;
-            }
-
-            list.innerHTML = state.recordings.map((rec, i) => `
-                <div class="recording-item">
-                    <div class="recording-info">
-                        <div class="recording-name">${rec.title}</div>
-                        <div class="recording-time">${rec.date} • ${Math.floor(rec.duration / 60)}:${String(rec.duration % 60).padStart(2, '0')}</div>
-                        <div style="font-size: 12px; color: var(--color-primary); margin-top: 4px;">👥 ${rec.participants.join(', ')}</div>
-                    </div>
-                    <div class="recording-actions">
-                        <button class="btn-small" onclick="loadRecording(${i})">📂 Открыть</button>
-                        <button class="btn-small danger" onclick="deleteRecording(${i})">🗑️</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function loadRecording(index) {
-            const rec = state.recordings[index];
-            document.getElementById('meetingTitle').value = rec.title;
-            document.getElementById('liveTranscript').value = rec.transcript;
-            state.participants = [...rec.participants];
-            state.tasks = [...rec.tasks];
-            updateParticipantsList();
-            updateSpeakerSelect();
-            updateTasksList();
-            alert(`Встреча "${rec.title}" загружена`);
-        }
-
-        function deleteRecording(index) {
-            if (confirm('Удалить эту встречу?')) {
-                state.recordings.splice(index, 1);
-                saveToLocalStorage();
-                updateRecordingsList();
-            }
-        }
-
-        function exportAsText() {
-            const content = `ВСТРЕЧА: ${document.getElementById('meetingTitle').value || 'Без названия'}
-ДАТА: ${new Date().toLocaleString('ru-RU')}
-УЧАСТНИКИ: ${state.participants.join(', ')}
-
-ТРАНСКРИПЦИЯ:
-${state.transcript}
-
-ЗАДАЧИ:
-${state.tasks.map(t => `□ ${t.text} (назначена: ${t.assignee})`).join('\n')}`;
-
-            downloadFile(content, 'meeting.txt', 'text/plain');
-        }
-
-        function exportAsJSON() {
-            const data = {
-                title: document.getElementById('meetingTitle').value,
-                date: new Date().toISOString(),
-                participants: state.participants,
-                transcript: state.transcript,
-                tasks: state.tasks,
-                analysis: state.currentAnalysis
-            };
-
-            downloadFile(JSON.stringify(data, null, 2), 'meeting.json', 'application/json');
-        }
-
-        function exportAsMarkdown() {
-            const content = `# ${document.getElementById('meetingTitle').value || 'Встреча'}
-
-**Дата:** ${new Date().toLocaleString('ru-RU')}  
-**Участники:** ${state.participants.join(', ')}
-
-## Транскрипция
-
-${state.transcript}
-
-## Задачи
-
-${state.tasks.map(t => `- [ ] ${t.text} _(${t.assignee})_`).join('\n')}
-
-${state.currentAnalysis ? `
-## Анализ
-
-### Ключевые моменты
-${state.currentAnalysis.keyMoments.map(m => `- ${m}`).join('\n')}
-` : ''}`;
-
-            downloadFile(content, 'meeting.md', 'text/markdown');
-        }
-
-        function downloadFile(content, filename, type) {
-            const blob = new Blob([content], { type });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
