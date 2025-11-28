@@ -268,7 +268,7 @@
                 
                 <div class="controls">
                     <div class="info-box">
-                        💡 Введите текст вручную или используйте микрофон
+                        💡 Текст вручную или микрофон (разрешение запрашивается один раз)
                     </div>
 
                     <div>
@@ -292,7 +292,7 @@
                     </div>
 
                     <div class="button-group">
-                        <button onclick="window.enableMicrophone()" class="warning">🎙️ Микрофон</button>
+                        <button id="micBtn" onclick="window.enableMicrophone()" class="warning">🎙️ Микрофон</button>
                         <button onclick="window.clearTranscript()" class="danger">🗑️ Очистить</button>
                     </div>
 
@@ -333,7 +333,8 @@
             recordings: [],
             recognition: null,
             isListening: false,
-            mediaStream: null
+            mediaStream: null,
+            permissionGranted: false
         };
 
         // INITIALIZE
@@ -354,16 +355,13 @@
 
             const debugHTML = `
                 <strong>✅ Проверка:</strong><br>
-                HTTPS: ${isHTTPS ? '✅' : '❌ (требуется)'}<br>
+                HTTPS: ${isHTTPS ? '✅' : '❌'}<br>
                 getUserMedia: ${hasGetUserMedia ? '✅' : '❌'}<br>
                 Speech API: ${hasSpeechRecognition ? '✅' : '❌'}<br>
                 Android: ${isAndroid ? '✅' : 'нет'}
             `;
             
-            const debugElement = document.getElementById('debugInfo');
-            if (debugElement) {
-                debugElement.innerHTML = debugHTML;
-            }
+            document.getElementById('debugInfo').innerHTML = debugHTML;
         }
 
         // SPEECH RECOGNITION INIT
@@ -384,7 +382,7 @@
                 state.recognition.onstart = () => {
                     console.log('🎙️ Recognition started');
                     state.isListening = true;
-                    updateStatus('🔴 Микрофон активен', 'recording');
+                    updateStatus('🔴 Говорите...', 'recording');
                 };
 
                 state.recognition.onresult = (event) => {
@@ -393,6 +391,7 @@
                         const transcript = event.results[i][0].transcript;
                         if (event.results[i].isFinal) {
                             state.transcript += transcript + ' ';
+                            console.log('✅ Final:', transcript);
                         } else {
                             interim += transcript;
                         }
@@ -402,7 +401,9 @@
 
                 state.recognition.onerror = (event) => {
                     console.error('❌ Error:', event.error);
-                    updateStatus('⚠️ ' + event.error, 'error');
+                    if (event.error !== 'no-speech') {
+                        updateStatus('⚠️ ' + event.error, 'error');
+                    }
                 };
 
                 state.recognition.onend = () => {
@@ -430,9 +431,11 @@
             state.isRecording = true;
             state.recordingTime = 0;
             state.transcript = '';
+            state.permissionGranted = false;
             
             document.getElementById('recordBtn').disabled = true;
             document.getElementById('stopBtn').disabled = false;
+            document.getElementById('micBtn').disabled = false;
             document.getElementById('liveTranscript').value = '';
             
             updateStatus('🔵 Запись началась', '');
@@ -457,6 +460,7 @@
             
             document.getElementById('recordBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
+            document.getElementById('micBtn').disabled = true;
             
             updateStatus('✅ Запись завершена', '');
 
@@ -468,6 +472,12 @@
                 }
             }
 
+            // Очищаем поток если был
+            if (state.mediaStream) {
+                state.mediaStream.getTracks().forEach(track => track.stop());
+                state.mediaStream = null;
+            }
+
             // Analyze and save
             setTimeout(() => {
                 analyzeTranscript();
@@ -477,7 +487,7 @@
             console.log('⏹️ Recording stopped');
         };
 
-        // ENABLE MICROPHONE
+        // ENABLE MICROPHONE - ИСПРАВЛЕНО: разрешение запрашивается один раз
         window.enableMicrophone = function() {
             if (!state.isRecording) {
                 alert('❌ Сначала нажмите "Начать"');
@@ -490,74 +500,56 @@
             }
 
             if (state.isListening) {
-                alert('⚠️ Микрофон уже включен');
+                alert('⚠️ Микрофон уже работает');
                 return;
             }
 
-            console.log('🎤 Requesting microphone...');
-            
+            console.log('🎤 Enabling microphone...');
+            updateStatus('⏳ Запрос доступа...', '');
+
+            // Если уже получили разрешение, используем сохраненный поток
+            if (state.permissionGranted && state.mediaStream) {
+                console.log('✅ Using saved stream');
+                try {
+                    state.recognition.start();
+                    updateStatus('🔴 Говорите...', 'recording');
+                } catch (e) {
+                    console.error('❌ Error:', e.message);
+                    updateStatus('❌ ' + e.message, 'error');
+                }
+                return;
+            }
+
+            // Первый раз - запрашиваем разрешение
             navigator.mediaDevices.getUserMedia({ audio: true })
                 .then(stream => {
-                    console.log('✅ Microphone granted');
+                    console.log('✅ Permission granted');
                     state.mediaStream = stream;
+                    state.permissionGranted = true;
                     
-                    if (!state.isListening) {
-                        try {
-                            state.recognition.start();
-                            console.log('✅ Recognition started');
-                            alert('✅ Микрофон включен!\nГоворите четко...');
-                        } catch (e) {
-                            console.error('❌ Start error:', e.message);
-                            alert('❌ Ошибка: ' + e.message);
-                        }
+                    try {
+                        state.recognition.start();
+                        updateStatus('🔴 Говорите...', 'recording');
+                    } catch (e) {
+                        console.error('❌ Error:', e.message);
+                        updateStatus('❌ ' + e.message, 'error');
                     }
                 })
                 .catch(error => {
-                    console.error('❌ Microphone error:', error.name, error.message);
+                    console.error('❌ Error:', error.name, error.message);
                     
                     let msg = '❌ ' + error.message;
-                    if (error.name === 'NotAllowedError') msg = '❌ Разрешение отклонено';
+                    if (error.name === 'NotAllowedError') msg = '❌ Разрешение отклонено в настройках браузера';
                     if (error.name === 'NotFoundError') msg = '❌ Микрофон не найден';
-                    if (error.name === 'NotSupportedError') msg = '❌ Используйте HTTPS!';
+                    if (error.name === 'NotSupportedError') msg = '❌ Требуется HTTPS';
                     
-                    alert(msg);
+                    updateStatus(msg, 'error');
                 });
-        };
-
-        // TEST RECOGNITION
-        window.testRecognition = function() {
-            if (!state.recognition) {
-                alert('❌ Speech Recognition недоступна');
-                return;
-            }
-
-            console.log('🧪 Testing recognition...');
-            updateStatus('🧪 Тест... Скажите "тест"', 'recording');
-            
-            try {
-                navigator.mediaDevices.getUserMedia({ audio: true })
-                    .then(stream => {
-                        state.mediaStream = stream;
-                        state.recognition.start();
-                        
-                        setTimeout(() => {
-                            state.recognition.stop();
-                            updateStatus('✅ Тест завершен', '');
-                        }, 3000);
-                    })
-                    .catch(e => {
-                        console.error('❌ Test error:', e.message);
-                        updateStatus('❌ Ошибка микрофона', 'error');
-                    });
-            } catch (e) {
-                console.error('❌ Test failed:', e.message);
-                updateStatus('❌ Тест не удался', 'error');
-            }
         };
 
         // CLEAR TRANSCRIPT
         window.clearTranscript = function() {
-            if (confirm('Очистить?')) {
+            if (confirm('Очистить текст?')) {
                 state.transcript = '';
                 document.getElementById('liveTranscript').value = '';
                 document.getElementById('analysisResult').innerHTML = 
