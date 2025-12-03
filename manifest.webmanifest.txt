@@ -1,0 +1,10 @@
+{
+  "name": "Заметки встречи (речь → текст)",
+  "short_name": "Заметки встречи",
+  "id": "/speech-notes/",
+  "start_url": "/speech-notes/",
+  "scope": "/speech-notes/",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#121212",
+  "icons":

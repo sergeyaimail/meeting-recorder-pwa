@@ -1,0 +1,40 @@
+// summary.js
+// Очень простой экстрактивный алгоритм: чистим текст, делим на предложения,
+// считаем вес по длине и ключевым словам, берём топ‑N [web:58][web:69].
+
+function buildSummary(text) {
+  const clean = text
+    .replace(/\s+/g, " ")
+    .replace(/([.!?])+/g, "$1.")
+    .trim();
+
+  const sentences = clean.split(/(?<=[.!?])\s+/u).filter(s => s.length > 25);
+  if (sentences.length === 0) return "Недостаточно текста для резюме.";
+
+  const keywords = [
+    "цель","договорились","решили","важно","срок","ответственный",
+    "следующий шаг","итог","результат","задача","план"
+  ];
+
+  const scores = sentences.map(s => {
+    let score = s.length;
+    const lower = s.toLowerCase();
+    keywords.forEach(k => {
+      if (lower.includes(k)) score += 80;
+    });
+    return score;
+  });
+
+  const ratio = 0.35;
+  const count = Math.max(1, Math.round(sentences.length * ratio));
+
+  const idx = scores
+    .map((score, i) => ({ i, score }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, count)
+    .map(o => o.i)
+    .sort((a, b) => a - b);
+
+  const result = idx.map(i => sentences[i].trim()).join(" ");
+  return result || "Не удалось построить резюме.";
+}

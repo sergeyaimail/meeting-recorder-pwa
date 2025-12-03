@@ -1,0 +1,121 @@
+// app.js
+
+// Web Speech API (Chrome)
+// В разных браузерах объект может называться по-разному [web:63][web:65].
+const SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
+
+const statusEl = document.getElementById("status");
+const transcriptEl = document.getElementById("transcript");
+const summaryEl = document.getElementById("summary");
+const btnStart = document.getElementById("btnStart");
+const btnStop = document.getElementById("btnStop");
+const btnSummary = document.getElementById("btnSummary");
+const recDot = document.getElementById("recDot");
+
+let recognition = null;
+let isRecording = false;
+let fullText = "";
+
+function setStatus(text) {
+  statusEl.textContent = text;
+}
+
+function toggleRecordingUI(active) {
+  isRecording = active;
+  btnStart.disabled = active || !SpeechRecognition;
+  btnStop.disabled = !active;
+  btnSummary.disabled = !fullText.trim();
+  recDot.classList.toggle("hidden", !active);
+}
+
+if (!SpeechRecognition) {
+  setStatus("Распознавание речи не поддерживается в этом браузере. Попробуйте Chrome.");
+  btnStart.disabled = true;
+  btnStop.disabled = true;
+  btnSummary.disabled = true;
+} else {
+  recognition = new SpeechRecognition();
+  recognition.lang = "ru-RU";
+  recognition.interimResults = true;
+  recognition.continuous = true;
+
+  recognition.onstart = () => {
+    setStatus("Запись идёт… Говорите.");
+    toggleRecordingUI(true);
+  };
+
+  recognition.onerror = (event) => {
+    console.error("Speech error:", event.error);
+    setStatus("Ошибка распознавания: " + event.error);
+    toggleRecordingUI(false);
+  };
+
+  recognition.onend = () => {
+    if (isRecording) {
+      // Иногда Chrome сам завершает сессию; перезапустим, если надо [web:57][web:60].
+      recognition.start();
+      return;
+    }
+    setStatus("Запись остановлена.");
+    toggleRecordingUI(false);
+  };
+
+  recognition.onresult = (event) => {
+    let interim = "";
+    let finalChunk = "";
+
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const res = event.results[i];
+      if (res.isFinal) {
+        finalChunk += res[0].transcript + " ";
+      } else {
+        interim += res[0].transcript + " ";
+      }
+    }
+
+    if (finalChunk) {
+      fullText += finalChunk;
+      transcriptEl.value = fullText + (interim ? "\n" + interim : "");
+    } else if (interim) {
+      transcriptEl.value = fullText + "\n" + interim;
+    }
+
+    btnSummary.disabled = !transcriptEl.value.trim();
+  };
+
+  btnStart.addEventListener("click", () => {
+    fullText = transcriptEl.value || "";
+    try {
+      recognition.start();
+    } catch (e) {
+      console.warn("start() called twice", e);
+    }
+  });
+
+  btnStop.addEventListener("click", () => {
+    if (!isRecording) return;
+    isRecording = false;
+    recognition.stop();
+    setStatus("Остановка…");
+  });
+
+  btnSummary.addEventListener("click", () => {
+    const text = transcriptEl.value.trim();
+    if (!text) return;
+    const summary = buildSummary(text); // функция из summary.js
+    summaryEl.textContent = summary;
+  });
+
+  setStatus("Готово к записи. Нажмите «Начать запись».");
+}
+
+// Регистрация service worker для PWA [web:56][web:59].
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("sw.js")
+      .then(() => console.log("SW registered"))
+      .catch((err) => console.warn("SW registration failed", err));
+  });
+}
